@@ -1,5 +1,19 @@
 export { DEMO_SONG_MAP } from "./fixtures/demo-song-map";
 export {
+  LYRIC_RISK_CODES,
+  LYRIC_RISK_DISCLAIMER,
+  LYRIC_RISK_PASSED_MESSAGE,
+  LyricRiskBlockedError,
+  checkArtistNoteLyricRisk,
+  checkSongMapLyricRisk,
+  enforceSongMapLyricRisk,
+  type FlaggedSongSection,
+  type LyricRiskCheck,
+  type LyricRiskCode,
+  type LyricRiskIssue,
+  type SongMapLyricRiskCheck,
+} from "./lyric-risk";
+export {
   NOTE_KINDS,
   SECTION_STATUSES,
   SONG_STATUSES,
