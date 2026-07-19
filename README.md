@@ -22,9 +22,10 @@ product and delivery specification.
 
 ## Current release
 
-`v0.6.0` adds the browser countdown workspace: artists can generate, review,
-retry, and locally persist structured GPT-5.6 practice sessions for the demo
-Song Map. The plan restores after a reload when browser storage is available.
+`v0.7.0` adds per-section practice logging and deterministic mastery trends to
+the countdown workspace. Artists can attach a 1–5 confidence rating and an
+optional lyric-safe structural note to any planned session, then see improving,
+flat, declining, or insufficient-data status for every mapped section.
 Continuous integration, metadata, and baseline test tooling support the OpenAI
 Build Week 2026 Apps for Your Life submission.
 
@@ -56,6 +57,20 @@ stored under a versioned, Song Map-specific key in browser-local storage.
 Malformed plans, changed target dates, and unavailable storage are handled
 without preventing a fresh generation attempt. Cross-device persistence remains
 outside the Build Week golden-path scope.
+
+## Practice logs and mastery trends
+
+Valid practice entries are stored in a separate versioned browser-local key for
+the active Song Map. Entries link a mapped section to a countdown session,
+timestamp, confidence level, and optional structural note. Malformed entries,
+unknown sections, and lyric-like notes are rejected before persistence.
+
+Trends are deterministic: fewer than two section entries yields
+`insufficient_data`; otherwise Encore orders entries chronologically, takes the
+most recent three, and compares the first confidence level with the last. A
+positive delta is `improving`, zero is `flat`, and a negative delta is
+`declining`. These outputs form the input for the later recording-readiness
+release.
 
 ## Requirements
 
