@@ -22,13 +22,19 @@ product and delivery specification.
 
 ## Current release
 
-`v0.14.0` polishes the responsive judge-facing demo and makes accessibility a
-tested release contract. The full golden path now has a keyboard skip link,
-visible light/dark focus indicators, focus management for expanding workflows,
-semantic lists and metrics, comfortable touch targets, AA contrast, reduced
-motion support, and overflow checks from 320px through large desktop layouts.
-Continuous integration, metadata, and baseline test tooling support the OpenAI
-Build Week 2026 Apps for Your Life submission.
+`v0.15.0` packages Encore as a reproducible Build Week submission. A clean-room
+setup guide, architecture map, evidence-grounded challenge diary, submission
+copy, demo runbook, and evidence ledger now describe the same tested product.
+Live-request, deployment, video, and Codex-session artifacts remain explicitly
+marked for capture instead of being represented by placeholders or estimates.
+
+## Submission documentation
+
+- [Reproduce Encore](./docs/REPRODUCIBILITY.md) from a clean clone, with or
+  without an OpenAI API key.
+- Review the [architecture and trust boundaries](./docs/ARCHITECTURE.md).
+- Follow the repository-backed [Build Week challenge diary](./docs/CHALLENGE_DIARY.md).
+- Use the [submission copy, demo runbook, and evidence ledger](./docs/BUILD_WEEK_SUBMISSION.md).
 
 ## Lyric-risk policy
 
@@ -180,13 +186,18 @@ pnpm test:e2e
 pnpm build
 ```
 
-The recorded `v0.14.0` baseline is **126 passing unit/integration tests across
+The recorded `v0.15.0` baseline is **126 passing unit/integration tests across
 20 files plus 1 passing Chromium golden-path test**. The browser test performs
 WCAG 2.0, 2.1, and 2.2 A/AA axe scans in empty and published states, verifies
 keyboard focus transitions, and checks responsive overflow at 320, 390, 768,
 and 1440 pixels. CI installs Chromium and runs both suites; API and model
 behavior is replaced with deterministic test doubles, so verification never
 requires an OpenAI API key.
+
+The two release-gate suites contain **11 recording-readiness tests** and **12
+Lyric Firewall tests** after parameterized cases are expanded. Run the exact
+commands and see the counting method in the
+[reproducibility guide](./docs/REPRODUCIBILITY.md#verified-test-baseline).
 
 ## Deploy
 
