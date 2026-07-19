@@ -22,9 +22,10 @@ product and delivery specification.
 
 ## Current release
 
-`v0.10.0` adds lyric-safe Making Of caption generation with GPT-5.6. Once a
-song is recorded, Encore turns its validated Song Map and practice history into
-a short caption that can be copied or regenerated without sending lyrics.
+`v0.11.0` completes the record-to-publish golden path. After generating a
+Making Of caption, an artist can confirm that they posted the cover externally,
+persist the published milestone, and see Map -> Plan -> Practice -> Record ->
+Publish completed end to end.
 Continuous integration, metadata, and baseline test tooling support the OpenAI
 Build Week 2026 Apps for Your Life submission.
 
@@ -98,8 +99,8 @@ Recording remains the artist's decision. Marking a not-ready song recorded
 requires an explicit acknowledgement, but Encore never blocks that choice. The
 latest validated decision is stored in a separate versioned browser-local key.
 A recorded decision freezes plan generation and practice logging while keeping
-all history available for the upcoming Making Of caption; returning to practice
-is reversible. Publishing remains part of the later record-to-publish release.
+all history available for the Making Of caption; returning to practice is
+reversible until the artist confirms the publish milestone.
 
 ## Making Of captions
 
@@ -115,6 +116,21 @@ reaches the browser. Successful captions display the same lyric-risk
 confirmation as practice plans and can be copied or regenerated. This is a
 defense-in-depth product safeguard, not a copyright determination or legal
 advice.
+
+## Record-to-publish lifecycle
+
+Encore never claims to publish to an external service. After the artist posts
+the recorded cover and caption themselves, an explicit confirmation creates a
+validated local publication record containing the Song Map ID, publish time,
+and exact caption snapshot. A matching recorded decision and valid generated
+caption are required.
+
+The versioned publication record restores after reload only while its recorded
+decision remains valid. Published state keeps practice controls frozen, shows
+the completed five-step golden path, and keeps the final caption copyable. An
+artist can reopen the recorded step without deleting the plan, practice logs,
+recording decision, or current caption. Cross-platform publishing integrations
+remain intentionally outside the Build Week scope.
 
 ## Requirements
 

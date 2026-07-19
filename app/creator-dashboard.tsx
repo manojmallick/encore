@@ -13,6 +13,7 @@ export interface CreatorDashboardProps {
   readonly dashboard: CreatorDashboardSnapshot;
   readonly readiness: RecordingReadinessResult;
   readonly decision: RecordingDecision | null;
+  readonly isPublished: boolean;
   readonly decisionFeedback: {
     readonly kind: "saved" | "warning" | "error";
     readonly message: string;
@@ -43,6 +44,7 @@ export function CreatorDashboard({
   dashboard,
   readiness,
   decision,
+  isPublished,
   decisionFeedback,
   onKeepPracticing,
   onMarkRecorded,
@@ -77,7 +79,7 @@ export function CreatorDashboard({
         </div>
         <span className="dashboard-status">
           <span aria-hidden="true" />
-          {isRecorded ? "Recorded" : "In practice"}
+          {isPublished ? "Published" : isRecorded ? "Recorded" : "In practice"}
         </span>
       </header>
 
@@ -144,11 +146,19 @@ export function CreatorDashboard({
             <div className="recorded-decision">
               <span aria-hidden="true">✓</span>
               <div>
-                <strong>{songTitle} is marked recorded</strong>
-                <p>
-                  Decision saved {formatDecisionDate(decision.decidedAt)} with readiness {decision.readinessStatus.replace("_", " ")}.
-                </p>
-                <button type="button" onClick={onReturnToPractice}>Return to practice</button>
+                <strong>
+                  {isPublished ? `${songTitle} is published` : `${songTitle} is marked recorded`}
+                </strong>
+                {isPublished ? (
+                  <p>The Map → Plan → Practice → Record → Publish path is complete.</p>
+                ) : (
+                  <>
+                    <p>
+                      Decision saved {formatDecisionDate(decision.decidedAt)} with readiness {decision.readinessStatus.replace("_", " ")}.
+                    </p>
+                    <button type="button" onClick={onReturnToPractice}>Return to practice</button>
+                  </>
+                )}
               </div>
             </div>
           ) : showDecisionFlow ? (

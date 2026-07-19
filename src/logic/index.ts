@@ -104,6 +104,17 @@ export {
   type RecordingDecisionKind,
 } from "./recording-decision";
 export {
+  SONG_PUBLICATION_STORAGE_VERSION,
+  SongPublicationInputError,
+  SongPublicationSchema,
+  createSongPublication,
+  persistSongPublication,
+  removeSongPublication,
+  restoreSongPublication,
+  songPublicationStorageKey,
+  type SongPublication,
+} from "./song-publication";
+export {
   RECORDING_READINESS_STATUSES,
   RecordingReadinessInputSchema,
   calculateCalendarDaysRemaining,

@@ -17,20 +17,26 @@ import {
   createCreatorDashboard,
   createPracticeLogEntry,
   createRecordingDecision,
+  createSongPublication,
   persistPracticePlan,
   persistPracticeLogs,
   persistRecordingDecision,
+  persistSongPublication,
   reducePracticePlanWorkspace,
+  removeSongPublication,
   requestCountdownPracticePlan,
   restorePracticePlan,
   restorePracticeLogs,
   restoreRecordingDecision,
+  restoreSongPublication,
   type ConfidenceLevel,
+  type GeneratedMakingOfCaption,
   type PracticeLogEntry,
   type RecordingDecision,
   type RecordingDecisionKind,
   type RecordingReadinessStatus,
   type SectionTrendDirection,
+  type SongPublication,
 } from "@/src/logic";
 
 const DEFAULT_SESSIONS_PER_WEEK = 2;
@@ -83,7 +89,13 @@ export function CountdownWorkspace() {
     readonly kind: "saved" | "warning" | "error";
     readonly message: string;
   } | null>(null);
+  const [publication, setPublication] = useState<SongPublication | null>(null);
+  const [publicationFeedback, setPublicationFeedback] = useState<{
+    readonly kind: "saved" | "warning" | "error";
+    readonly message: string;
+  } | null>(null);
   const isRecorded = recordingDecision?.decision === "recorded";
+  const isPublished = publication?.status === "published";
 
   const sectionTrends = useMemo(
     () =>
@@ -132,12 +144,18 @@ export function CountdownWorkspace() {
         window.localStorage,
         DEMO_SONG_MAP.id,
       );
+      const restoredPublication = restoreSongPublication(
+        window.localStorage,
+        DEMO_SONG_MAP.id,
+        restoredDecision,
+      );
       if (restored) {
         setSessionsPerWeek(restored.sessionsPerWeek);
         setPersistenceStatus("saved");
       }
       setPracticeLogs(restoredLogs);
       setRecordingDecision(restoredDecision);
+      setPublication(restoredPublication);
       dispatch({ type: "restore", plan: restored?.plan ?? null });
     });
 
@@ -262,6 +280,41 @@ export function CountdownWorkspace() {
     }
   }
 
+  function markSongPublished(caption: GeneratedMakingOfCaption) {
+    try {
+      const nextPublication = createSongPublication(
+        DEMO_SONG_MAP.id,
+        recordingDecision,
+        caption,
+        new Date().toISOString(),
+      );
+      const saved = persistSongPublication(window.localStorage, nextPublication);
+      setPublication(nextPublication);
+      setPublicationFeedback({
+        kind: saved ? "saved" : "warning",
+        message: saved
+          ? "Published milestone saved. The Encore golden path is complete."
+          : "Marked published for this visit, but browser storage is unavailable.",
+      });
+    } catch {
+      setPublicationFeedback({
+        kind: "error",
+        message: "Encore could not mark this song published. Please try again.",
+      });
+    }
+  }
+
+  function reopenRecordedStep() {
+    const removed = removeSongPublication(window.localStorage, DEMO_SONG_MAP.id);
+    setPublication(null);
+    setPublicationFeedback({
+      kind: removed ? "saved" : "warning",
+      message: removed
+        ? "Publish milestone reopened. The recording and practice history are unchanged."
+        : "Reopened for this visit, but the saved milestone could not be removed.",
+    });
+  }
+
   const isLoading = state.phase === "loading";
 
   return (
@@ -284,7 +337,7 @@ export function CountdownWorkspace() {
         <aside className="song-panel" aria-labelledby="song-heading">
           <div className="panel-kicker">
             <span className="status-dot" aria-hidden="true" />
-            {isRecorded ? "Recording complete" : "Demo song map"}
+            {isPublished ? "Published" : isRecorded ? "Recording complete" : "Demo song map"}
           </div>
           <h2 id="song-heading">{DEMO_SONG_MAP.title}</h2>
           <p className="artist">Originally by {DEMO_SONG_MAP.artist}</p>
@@ -323,7 +376,9 @@ export function CountdownWorkspace() {
           </label>
 
           <button className="generate-button" disabled={isLoading || isRecorded} onClick={generatePlan}>
-            {isRecorded ? (
+            {isPublished ? (
+              "Published"
+            ) : isRecorded ? (
               "Recording complete"
             ) : isLoading ? (
               <>
@@ -337,8 +392,10 @@ export function CountdownWorkspace() {
             )}
           </button>
           <p className="privacy-note">
-            {isRecorded
-              ? "Return to practice from the dashboard to edit this plan."
+            {isPublished
+              ? "The record-to-publish path is complete."
+              : isRecorded
+                ? "Return to practice from the dashboard to edit this plan."
               : "Saved only in this browser. Your notes stay lyric-free."}
           </p>
         </aside>
@@ -423,6 +480,7 @@ export function CountdownWorkspace() {
                   dashboard={creatorDashboard}
                   readiness={recordingReadiness}
                   decision={recordingDecision}
+                  isPublished={isPublished}
                   decisionFeedback={decisionFeedback}
                   onKeepPracticing={() => saveRecordingDecision("keep_practicing", false)}
                   onMarkRecorded={(acknowledged) =>
@@ -437,6 +495,10 @@ export function CountdownWorkspace() {
                   songMap={DEMO_SONG_MAP}
                   practiceLogs={practiceLogs}
                   recordingDecision={recordingDecision}
+                  publication={publication}
+                  publicationFeedback={publicationFeedback}
+                  onMarkPublished={markSongPublished}
+                  onReopenPublished={reopenRecordedStep}
                 />
               )}
 
