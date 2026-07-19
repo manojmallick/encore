@@ -17,6 +17,7 @@ export {
   MAX_PRACTICE_SESSIONS,
   PRACTICE_PLAN_MODEL,
   PracticePlanConfigurationError,
+  GeneratedPracticePlanSchema,
   PracticePlanInputError,
   PracticePlanModelError,
   PracticePlanModelOutputSchema,
@@ -35,6 +36,23 @@ export {
   type PracticePlanRequest,
   type PracticeSession,
 } from "./practice-plan";
+export {
+  INITIAL_PRACTICE_PLAN_STATE,
+  PracticePlanRequestError,
+  reducePracticePlanWorkspace,
+  requestCountdownPracticePlan,
+  type PracticePlanFetch,
+  type PracticePlanWorkspaceAction,
+  type PracticePlanWorkspaceState,
+} from "./practice-plan-client";
+export {
+  PRACTICE_PLAN_STORAGE_VERSION,
+  persistPracticePlan,
+  practicePlanStorageKey,
+  restorePracticePlan,
+  type PracticePlanStorage,
+  type RestoredPracticePlan,
+} from "./practice-plan-storage";
 export {
   NOTE_KINDS,
   SECTION_STATUSES,

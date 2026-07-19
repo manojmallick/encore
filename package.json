@@ -1,6 +1,6 @@
 {
   "name": "encore",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "description": "A song-to-publish practice planner for independent cover artists.",
   "packageManager": "pnpm@10.33.2",

@@ -58,6 +58,40 @@ export const PracticePlanModelOutputSchema = z
   })
   .strict();
 
+export const GeneratedPracticePlanSchema = z
+  .object({
+    model: z.literal(PRACTICE_PLAN_MODEL),
+    daysRemaining: z.number().int().positive(),
+    totalSessions: z.number().int().positive().max(MAX_PRACTICE_SESSIONS),
+    lyricRisk: z
+      .object({
+        passed: z.literal(true),
+        message: z.string().trim().min(1),
+      })
+      .strict(),
+    sessions: z.array(PracticeSessionSchema).min(1).max(MAX_PRACTICE_SESSIONS),
+  })
+  .strict()
+  .superRefine((plan, context) => {
+    if (plan.sessions.length !== plan.totalSessions) {
+      context.addIssue({
+        code: "custom",
+        message: "Session count must match totalSessions.",
+        path: ["sessions"],
+      });
+    }
+
+    plan.sessions.forEach((session, index) => {
+      if (session.sessionNumber !== index + 1) {
+        context.addIssue({
+          code: "custom",
+          message: "Sessions must use contiguous numbering.",
+          path: ["sessions", index, "sessionNumber"],
+        });
+      }
+    });
+  });
+
 export interface PracticePlanRequest {
   readonly songMap: SongMap;
   readonly sessionsPerWeek: number;
@@ -81,14 +115,7 @@ export interface CountdownFacts {
   readonly totalSessions: number;
 }
 
-export interface GeneratedPracticePlan extends CountdownFacts {
-  readonly model: typeof PRACTICE_PLAN_MODEL;
-  readonly lyricRisk: {
-    readonly passed: true;
-    readonly message: string;
-  };
-  readonly sessions: readonly PracticeSession[];
-}
+export type GeneratedPracticePlan = z.infer<typeof GeneratedPracticePlanSchema>;
 
 export type PracticePlanInputErrorCode = "past_target_date" | "too_many_sessions";
 
@@ -256,7 +283,7 @@ export async function generateCountdownPracticePlan(
   }
   validateSessionSequence(parsedOutput.data, facts.totalSessions);
 
-  return {
+  return GeneratedPracticePlanSchema.parse({
     model: PRACTICE_PLAN_MODEL,
     ...facts,
     lyricRisk: {
@@ -264,5 +291,5 @@ export async function generateCountdownPracticePlan(
       message: LYRIC_RISK_PASSED_MESSAGE,
     },
     sessions: parsedOutput.data.sessions,
-  };
+  });
 }

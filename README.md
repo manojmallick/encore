@@ -22,8 +22,9 @@ product and delivery specification.
 
 ## Current release
 
-`v0.5.0` adds server-side GPT-5.6 countdown-plan generation through the
-Responses API, with strict structured output and lyric-risk enforcement.
+`v0.6.0` adds the browser countdown workspace: artists can generate, review,
+retry, and locally persist structured GPT-5.6 practice sessions for the demo
+Song Map. The plan restores after a reload when browser storage is available.
 Continuous integration, metadata, and baseline test tooling support the OpenAI
 Build Week 2026 Apps for Your Life submission.
 
@@ -48,6 +49,13 @@ explicit low reasoning and never requests lyrics, tablature, or sheet music.
 
 Set the server-only `OPENAI_API_KEY` value in `.env.local` before calling the
 live route. Tests inject a model double and never make billable API requests.
+
+The home page calls this route for the lyric-safe demo Song Map and validates
+the response again before display or persistence. The latest valid plan is
+stored under a versioned, Song Map-specific key in browser-local storage.
+Malformed plans, changed target dates, and unavailable storage are handled
+without preventing a fresh generation attempt. Cross-device persistence remains
+outside the Build Week golden-path scope.
 
 ## Requirements
 
