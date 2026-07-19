@@ -22,9 +22,9 @@ product and delivery specification.
 
 ## Current release
 
-`v0.8.0` adds transparent recording readiness to the countdown workspace.
-Encore now combines section confidence, declining trends, and elapsed plan time
-into an explained `insufficient_data`, `behind`, `on_track`, or `ready` result.
+`v0.9.0` adds a creator dashboard and recording decision flow. Countdown,
+session progress, weak sections, mastery, and readiness now form one hierarchy,
+and artists can persist a confirmed keep-practicing or recorded decision.
 Continuous integration, metadata, and baseline test tooling support the OpenAI
 Build Week 2026 Apps for Your Life submission.
 
@@ -85,6 +85,21 @@ expected from elapsed plan time or when at least two sections decline. `ready`
 requires at least 4/5 average confidence, no declining sections, and no more
 than two days remaining. Every result displays the coverage, average, elapsed
 time, expected confidence, gap, decline count, and threshold reasons used.
+
+## Creator dashboard and recording decision
+
+The dashboard is derived from the current plan, logs, trends, and readiness
+result. It shows the next unlogged session and ranks up to three weak sections
+with unrated sections first, then declining sections, then lower confidence;
+Song Map order breaks ties. Readiness maps to one explained recommendation:
+gather data, adjust the plan, keep practicing, or record.
+
+Recording remains the artist's decision. Marking a not-ready song recorded
+requires an explicit acknowledgement, but Encore never blocks that choice. The
+latest validated decision is stored in a separate versioned browser-local key.
+A recorded decision freezes plan generation and practice logging while keeping
+all history available for the upcoming Making Of caption; returning to practice
+is reversible. Publishing remains part of the later record-to-publish release.
 
 ## Requirements
 

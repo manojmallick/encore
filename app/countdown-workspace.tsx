@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useReducer, useState, type FormEvent } from "react";
 
+import { CreatorDashboard } from "./creator-dashboard";
+
 import {
   DEMO_SONG_MAP,
   CONFIDENCE_LEVELS,
@@ -11,15 +13,21 @@ import {
   calculateCalendarDaysRemaining,
   calculateRecordingReadiness,
   computeSectionTrends,
+  createCreatorDashboard,
   createPracticeLogEntry,
+  createRecordingDecision,
   persistPracticePlan,
   persistPracticeLogs,
+  persistRecordingDecision,
   reducePracticePlanWorkspace,
   requestCountdownPracticePlan,
   restorePracticePlan,
   restorePracticeLogs,
+  restoreRecordingDecision,
   type ConfidenceLevel,
   type PracticeLogEntry,
+  type RecordingDecision,
+  type RecordingDecisionKind,
   type RecordingReadinessStatus,
   type SectionTrendDirection,
 } from "@/src/logic";
@@ -69,6 +77,12 @@ export function CountdownWorkspace() {
     readonly kind: "saved" | "warning" | "error";
     readonly message: string;
   } | null>(null);
+  const [recordingDecision, setRecordingDecision] = useState<RecordingDecision | null>(null);
+  const [decisionFeedback, setDecisionFeedback] = useState<{
+    readonly kind: "saved" | "warning" | "error";
+    readonly message: string;
+  } | null>(null);
+  const isRecorded = recordingDecision?.decision === "recorded";
 
   const sectionTrends = useMemo(
     () =>
@@ -89,6 +103,19 @@ export function CountdownWorkspace() {
       originalPlanDays: state.plan.daysRemaining,
     });
   }, [sectionTrends, state]);
+  const creatorDashboard = useMemo(() => {
+    if (state.phase !== "success" || recordingReadiness === null) {
+      return null;
+    }
+
+    return createCreatorDashboard({
+      songMap: DEMO_SONG_MAP,
+      plan: state.plan,
+      practiceLogs,
+      sectionTrends,
+      readiness: recordingReadiness,
+    });
+  }, [practiceLogs, recordingReadiness, sectionTrends, state]);
 
   useEffect(() => {
     let active = true;
@@ -100,11 +127,16 @@ export function CountdownWorkspace() {
 
       const restored = restorePracticePlan(window.localStorage, DEMO_SONG_MAP);
       const restoredLogs = restorePracticeLogs(window.localStorage, DEMO_SONG_MAP);
+      const restoredDecision = restoreRecordingDecision(
+        window.localStorage,
+        DEMO_SONG_MAP.id,
+      );
       if (restored) {
         setSessionsPerWeek(restored.sessionsPerWeek);
         setPersistenceStatus("saved");
       }
       setPracticeLogs(restoredLogs);
+      setRecordingDecision(restoredDecision);
       dispatch({ type: "restore", plan: restored?.plan ?? null });
     });
 
@@ -114,7 +146,7 @@ export function CountdownWorkspace() {
   }, []);
 
   async function generatePlan() {
-    if (state.phase === "loading") {
+    if (state.phase === "loading" || isRecorded) {
       return;
     }
 
@@ -146,6 +178,7 @@ export function CountdownWorkspace() {
   }
 
   function openLogForm(sessionNumber: number) {
+    if (isRecorded) return;
     setActiveLogSession(sessionNumber);
     setLogFeedback(null);
     setPracticeNote("");
@@ -154,6 +187,7 @@ export function CountdownWorkspace() {
 
   function submitPracticeLog(event: FormEvent<HTMLFormElement>, sessionNumber: number) {
     event.preventDefault();
+    if (isRecorded) return;
 
     try {
       const entry = createPracticeLogEntry(
@@ -194,6 +228,39 @@ export function CountdownWorkspace() {
     }
   }
 
+  function saveRecordingDecision(
+    decisionKind: RecordingDecisionKind,
+    acknowledgedNotReady: boolean,
+  ) {
+    if (recordingReadiness === null) return;
+
+    try {
+      const decision = createRecordingDecision(
+        DEMO_SONG_MAP.id,
+        decisionKind,
+        recordingReadiness,
+        acknowledgedNotReady,
+        new Date().toISOString(),
+      );
+      const saved = persistRecordingDecision(window.localStorage, decision);
+      setRecordingDecision(decision);
+      setActiveLogSession(null);
+      setDecisionFeedback({
+        kind: saved ? "saved" : "warning",
+        message: saved
+          ? decisionKind === "recorded"
+            ? "Recording decision saved. Practice controls are now frozen."
+            : "Keep-practicing decision saved."
+          : "Decision applied for this visit, but browser storage is unavailable.",
+      });
+    } catch {
+      setDecisionFeedback({
+        kind: "error",
+        message: "Encore could not save this recording decision. Please try again.",
+      });
+    }
+  }
+
   const isLoading = state.phase === "loading";
 
   return (
@@ -216,7 +283,7 @@ export function CountdownWorkspace() {
         <aside className="song-panel" aria-labelledby="song-heading">
           <div className="panel-kicker">
             <span className="status-dot" aria-hidden="true" />
-            Demo song map
+            {isRecorded ? "Recording complete" : "Demo song map"}
           </div>
           <h2 id="song-heading">{DEMO_SONG_MAP.title}</h2>
           <p className="artist">Originally by {DEMO_SONG_MAP.artist}</p>
@@ -243,7 +310,7 @@ export function CountdownWorkspace() {
             <select
               id="sessions-per-week"
               value={sessionsPerWeek}
-              disabled={isLoading}
+              disabled={isLoading || isRecorded}
               onChange={(event) => setSessionsPerWeek(Number(event.target.value))}
             >
               {[1, 2, 3, 4, 5, 6, 7].map((frequency) => (
@@ -254,8 +321,10 @@ export function CountdownWorkspace() {
             </select>
           </label>
 
-          <button className="generate-button" disabled={isLoading} onClick={generatePlan}>
-            {isLoading ? (
+          <button className="generate-button" disabled={isLoading || isRecorded} onClick={generatePlan}>
+            {isRecorded ? (
+              "Recording complete"
+            ) : isLoading ? (
               <>
                 <span className="spinner" aria-hidden="true" />
                 Building your countdown…
@@ -266,7 +335,11 @@ export function CountdownWorkspace() {
               "Generate practice plan"
             )}
           </button>
-          <p className="privacy-note">Saved only in this browser. Your notes stay lyric-free.</p>
+          <p className="privacy-note">
+            {isRecorded
+              ? "Return to practice from the dashboard to edit this plan."
+              : "Saved only in this browser. Your notes stay lyric-free."}
+          </p>
         </aside>
 
         <section className="plan-panel" aria-labelledby="plan-heading" aria-live="polite">
@@ -342,6 +415,21 @@ export function CountdownWorkspace() {
                   ? "Saved in this browser"
                   : "Plan available for this visit; browser storage is unavailable"}
               </p>
+
+              {creatorDashboard && recordingReadiness && (
+                <CreatorDashboard
+                  songTitle={DEMO_SONG_MAP.title}
+                  dashboard={creatorDashboard}
+                  readiness={recordingReadiness}
+                  decision={recordingDecision}
+                  decisionFeedback={decisionFeedback}
+                  onKeepPracticing={() => saveRecordingDecision("keep_practicing", false)}
+                  onMarkRecorded={(acknowledged) =>
+                    saveRecordingDecision("recorded", acknowledged)
+                  }
+                  onReturnToPractice={() => saveRecordingDecision("keep_practicing", false)}
+                />
+              )}
 
               {recordingReadiness && (
                 <section
@@ -495,7 +583,7 @@ export function CountdownWorkspace() {
                           </ul>
                         )}
 
-                        {activeLogSession === session.sessionNumber ? (
+                        {!isRecorded && activeLogSession === session.sessionNumber ? (
                           <form
                             className="practice-log-form"
                             onSubmit={(event) => submitPracticeLog(event, session.sessionNumber)}
@@ -558,7 +646,7 @@ export function CountdownWorkspace() {
                               <button type="submit">Save practice entry</button>
                             </div>
                           </form>
-                        ) : (
+                        ) : !isRecorded ? (
                           <button
                             className="log-practice-button"
                             type="button"
@@ -566,7 +654,7 @@ export function CountdownWorkspace() {
                           >
                             <span aria-hidden="true">＋</span> Log practice
                           </button>
-                        )}
+                        ) : null}
                       </div>
                     </li>
                   );
