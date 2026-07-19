@@ -22,11 +22,11 @@ product and delivery specification.
 
 ## Current release
 
-`v0.12.0` protects the record-to-publish golden path with a deterministic
-cross-domain regression suite and a real Chromium browser test. The tests cover
-Map -> Plan -> Practice -> Record -> Publish, reload restoration, reversible
-reopening, lyric-risk blocks, malformed model output, mismatched history, and
-corrupted or orphaned browser state without making live OpenAI requests.
+`v0.13.0` hardens Encore's calendar, validation, and generation failure
+boundaries. Countdown and readiness dates now share strict UTC calendar-day
+arithmetic, invalid browser inputs are rejected before a request, and API
+responses use stable, sanitized 400, 422, 500, and 502 contracts for invalid
+data, lyric risk, missing configuration, and generation failures.
 Continuous integration, metadata, and baseline test tooling support the OpenAI
 Build Week 2026 Apps for Your Life submission.
 
@@ -58,6 +58,18 @@ stored under a versioned, Song Map-specific key in browser-local storage.
 Malformed plans, changed target dates, and unavailable storage are handled
 without preventing a fresh generation attempt. Cross-device persistence remains
 outside the Build Week golden-path scope.
+
+Date-only targets use UTC calendar days consistently in the plan API and
+browser readiness calculation. Equivalent timezone-offset instants therefore
+produce the same countdown, while impossible dates and invalid clocks fail
+closed. A target on the current UTC day is too late for a new plan; readiness
+clamps current or past targets to zero remaining days.
+
+Both generation APIs reject malformed JSON, unknown fields, empty required
+data, and invalid confidence or frequency values before model invocation.
+Relationship and lyric-risk failures remain actionable, while configuration,
+provider, refusal, and malformed-output details are sanitized before reaching
+the browser.
 
 ## Practice logs and mastery trends
 
@@ -168,8 +180,8 @@ pnpm test:e2e
 pnpm build
 ```
 
-The recorded `v0.12.0` baseline is **112 passing unit/integration tests across
-19 files plus 1 passing Chromium golden-path test**. CI installs Chromium and
+The recorded `v0.13.0` baseline is **126 passing unit/integration tests across
+20 files plus 1 passing Chromium golden-path test**. CI installs Chromium and
 runs both suites; API and model behavior is replaced with deterministic test
 doubles, so verification never requires an OpenAI API key.
 

@@ -49,6 +49,14 @@ function request(value: unknown): Request {
   });
 }
 
+function rawRequest(value: string): Request {
+  return new Request("http://localhost/api/making-of-caption", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: value,
+  });
+}
+
 function handler(
   generateModelOutput: Parameters<typeof createMakingOfCaptionPost>[0]["generateModelOutput"],
 ) {
@@ -77,6 +85,34 @@ describe("POST /api/making-of-caption", () => {
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toMatchObject({
+      error: { code: "invalid_request" },
+    });
+    expect(generateModelOutput).not.toHaveBeenCalled();
+
+    const malformed = await handler(generateModelOutput)(rawRequest("{not-json"));
+    expect(malformed.status).toBe(400);
+    await expect(malformed.json()).resolves.toMatchObject({
+      error: { code: "invalid_request" },
+    });
+    expect(generateModelOutput).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 and skips the model for empty history and invalid confidence", async () => {
+    const generateModelOutput = vi.fn();
+    const empty = body();
+    empty.practiceLogs = [];
+    const invalidConfidence = body();
+    invalidConfidence.practiceLogs[0]!.confidenceLevel = 6 as 5;
+
+    const emptyResponse = await handler(generateModelOutput)(request(empty));
+    const confidenceResponse = await handler(generateModelOutput)(request(invalidConfidence));
+
+    expect(emptyResponse.status).toBe(400);
+    expect(confidenceResponse.status).toBe(400);
+    await expect(emptyResponse.json()).resolves.toMatchObject({
+      error: { code: "invalid_request" },
+    });
+    await expect(confidenceResponse.json()).resolves.toMatchObject({
       error: { code: "invalid_request" },
     });
     expect(generateModelOutput).not.toHaveBeenCalled();
@@ -113,8 +149,11 @@ describe("POST /api/making-of-caption", () => {
     })(request(body()));
 
     expect(response.status).toBe(500);
-    await expect(response.json()).resolves.toMatchObject({
-      error: { code: "configuration_error" },
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "configuration_error",
+        message: "Caption generation is not configured right now.",
+      },
     });
   });
 
@@ -126,13 +165,18 @@ describe("POST /api/making-of-caption", () => {
       caption:
         'My story includes "A very long quoted passage copied from somewhere instead of a safe account of the practice process."',
     }))(request(body()));
+    const missingOutput = await handler(async () => null)(request(body()));
 
     expect(provider.status).toBe(502);
     expect(unsafe.status).toBe(502);
+    expect(missingOutput.status).toBe(502);
     await expect(provider.json()).resolves.toMatchObject({
       error: { code: "generation_failed" },
     });
     await expect(unsafe.json()).resolves.toMatchObject({
+      error: { code: "generation_failed" },
+    });
+    await expect(missingOutput.json()).resolves.toMatchObject({
       error: { code: "generation_failed" },
     });
   });

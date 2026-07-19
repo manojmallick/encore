@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { calendarDaysUntil } from "./calendar-date";
 import { SECTION_TRENDS, type SectionTrend } from "./section-mastery";
 
 export const RECORDING_READINESS_STATUSES = [
@@ -89,32 +90,14 @@ export interface RecordingReadinessResult {
   readonly factors: RecordingReadinessFactors;
 }
 
-const MILLISECONDS_PER_DAY = 86_400_000;
 const THRESHOLD_EPSILON = 1e-9;
-
-function utcDay(date: Date): number {
-  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-}
-
-function targetUtcDay(targetDate: string): number {
-  const parsedDate = z.iso.date().parse(targetDate);
-  const [year, month, day] = parsedDate.split("-").map(Number);
-  return Date.UTC(year, month - 1, day);
-}
 
 function roundToTwo(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
 export function calculateCalendarDaysRemaining(targetDate: string, now: Date): number {
-  if (Number.isNaN(now.getTime())) {
-    throw new TypeError("Readiness requires a valid current date.");
-  }
-
-  return Math.max(
-    0,
-    Math.ceil((targetUtcDay(targetDate) - utcDay(now)) / MILLISECONDS_PER_DAY),
-  );
+  return Math.max(0, calendarDaysUntil(targetDate, now));
 }
 
 export function calculateRecordingReadiness(

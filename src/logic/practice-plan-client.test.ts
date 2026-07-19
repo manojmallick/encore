@@ -40,6 +40,21 @@ describe("practice-plan browser client", () => {
     );
   });
 
+  it("rejects invalid browser input before making a request", async () => {
+    const fetchPlan = vi.fn();
+
+    await expect(
+      requestCountdownPracticePlan(
+        { songMap: DEMO_SONG_MAP, sessionsPerWeek: 2.5 },
+        fetchPlan,
+      ),
+    ).rejects.toMatchObject({
+      name: "PracticePlanRequestError",
+      code: "invalid_request",
+    });
+    expect(fetchPlan).not.toHaveBeenCalled();
+  });
+
   it("surfaces actionable API errors and rejects malformed success responses", async () => {
     await expect(
       requestCountdownPracticePlan(
@@ -62,6 +77,25 @@ describe("practice-plan browser client", () => {
         async () => Response.json({ ...PLAN, totalSessions: 3 }),
       ),
     ).rejects.toBeInstanceOf(PracticePlanRequestError);
+  });
+
+  it("rejects non-JSON responses and malformed API error contracts", async () => {
+    await expect(
+      requestCountdownPracticePlan(
+        { songMap: DEMO_SONG_MAP, sessionsPerWeek: 2 },
+        async () => new Response("not json", { status: 502 }),
+      ),
+    ).rejects.toMatchObject({ code: "invalid_response" });
+
+    await expect(
+      requestCountdownPracticePlan(
+        { songMap: DEMO_SONG_MAP, sessionsPerWeek: 2 },
+        async () => Response.json({ provider: "private detail" }, { status: 502 }),
+      ),
+    ).rejects.toMatchObject({
+      code: "generation_failed",
+      message: "Encore could not generate this practice plan. Please try again.",
+    });
   });
 
   it("keeps server configuration details out of browser error copy", async () => {

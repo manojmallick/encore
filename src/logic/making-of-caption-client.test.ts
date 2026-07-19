@@ -58,6 +58,18 @@ describe("making-of-caption client", () => {
     );
   });
 
+  it("rejects empty or invalid practice history before making a request", async () => {
+    const fetchCaption = vi.fn();
+    const empty = input();
+    empty.practiceLogs = [];
+
+    await expect(requestMakingOfCaption(empty, fetchCaption)).rejects.toMatchObject({
+      name: "MakingOfCaptionRequestError",
+      code: "invalid_request",
+    });
+    expect(fetchCaption).not.toHaveBeenCalled();
+  });
+
   it("preserves actionable lyric-risk errors", async () => {
     const fetchCaption = vi.fn(async () =>
       Response.json(
@@ -93,6 +105,22 @@ describe("making-of-caption client", () => {
     await expect(
       requestMakingOfCaption(input(), async () => Response.json({ caption: "invalid" })),
     ).rejects.toMatchObject({ code: "invalid_response" });
+  });
+
+  it("sanitizes non-JSON and malformed API error contracts", async () => {
+    await expect(
+      requestMakingOfCaption(input(), async () => new Response("not json", { status: 502 })),
+    ).rejects.toMatchObject({ code: "invalid_response" });
+
+    await expect(
+      requestMakingOfCaption(
+        input(),
+        async () => Response.json({ provider: "private detail" }, { status: 502 }),
+      ),
+    ).rejects.toMatchObject({
+      code: "generation_failed",
+      message: "Encore could not generate this caption right now. Please try again shortly.",
+    });
   });
 
   it("maps network failures to an actionable message", async () => {

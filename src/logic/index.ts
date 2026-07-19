@@ -1,5 +1,10 @@
 export { DEMO_SONG_MAP } from "./fixtures/demo-song-map";
 export {
+  CalendarDateInputError,
+  calendarDaysUntil,
+  type CalendarDateInputErrorCode,
+} from "./calendar-date";
+export {
   LYRIC_RISK_CODES,
   LYRIC_RISK_DISCLAIMER,
   LYRIC_RISK_PASSED_MESSAGE,

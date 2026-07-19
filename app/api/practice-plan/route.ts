@@ -61,7 +61,11 @@ export function createPracticePlanPost(dependencies: PracticePlanRouteDependenci
         );
       }
       if (error instanceof PracticePlanConfigurationError) {
-        return errorResponse(500, "configuration_error", error.message);
+        return errorResponse(
+          500,
+          "configuration_error",
+          "Practice plan generation is not configured right now.",
+        );
       }
       if (error instanceof PracticePlanModelError || error instanceof PracticePlanOutputError) {
         return errorResponse(

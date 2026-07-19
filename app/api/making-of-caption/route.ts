@@ -46,7 +46,11 @@ export function createMakingOfCaptionPost(
         return errorResponse(422, error.code, error.message, error.details);
       }
       if (error instanceof MakingOfCaptionConfigurationError) {
-        return errorResponse(500, "configuration_error", error.message);
+        return errorResponse(
+          500,
+          "configuration_error",
+          "Caption generation is not configured right now.",
+        );
       }
       if (
         error instanceof MakingOfCaptionModelError ||
