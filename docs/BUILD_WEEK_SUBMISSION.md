@@ -71,11 +71,12 @@ generative planning made the recommendation explainable and testable. See the
 
 ### What is next
 
-The remaining Build Week work is operational: deploy the tested revision,
-smoke-test it in a clean browser, record the live GPT-5.6 plan and caption
-requests, capture the Codex session evidence, and freeze matching repository,
-video, deployment, and Devpost descriptions. Accounts, cross-device sync,
-audio analysis, and direct publishing remain deliberately out of scope.
+Encore is deployed and the production origin passes the clean-browser release
+smoke. The remaining Build Week work is to record the live GPT-5.6 plan and
+caption requests, capture the Codex session evidence, and freeze matching
+repository, video, deployment, and Devpost descriptions. Accounts,
+cross-device sync, audio analysis, and direct publishing remain deliberately
+out of scope.
 
 ## Demo runbook — target 2:45
 
@@ -118,7 +119,7 @@ Status meanings: **verified** is reproducible from the public repository;
 | Live GPT-5.6 practice-plan request | capture | Record the request action and rendered dated plan in the final demo |
 | Live GPT-5.6 caption request | capture | Record the request action, rendered caption, and pass confirmation in the final demo |
 | Timestamped Codex task/session evidence | capture | Use `/feedback` in the relevant Codex task, then record the exact session ID here and in Devpost |
-| Production URL | capture | Add only after v0.16 deployment and clean-browser smoke test |
+| Production URL | verified | <https://encore-sigma-ten.vercel.app>; clean-browser production smoke passed locally against the v0.16 release candidate |
 | Demo video URL | capture | Add only after the final under-three-minute recording is uploaded and reviewed |
 | Devpost project URL and submitted timestamp | capture | Add after submission; retain confirmation before the stated deadline |
 
