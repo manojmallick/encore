@@ -22,10 +22,20 @@ product and delivery specification.
 
 ## Current release
 
-`v0.2.0` adds the typed Song Map domain model and a deterministic, lyric-free
-demo fixture on top of the wrapper-generated Next.js and TypeScript foundation.
-Continuous integration, metadata, and baseline test tooling support the OpenAI
-Build Week 2026 Apps for Your Life submission.
+`v0.4.0` adds deterministic lyric-risk checks for artist-authored notes on top
+of the typed Song Map domain. Continuous integration, metadata, and baseline
+test tooling support the OpenAI Build Week 2026 Apps for Your Life submission.
+
+## Lyric-risk policy
+
+Encore accepts structural practice notes, not song lyrics or sheet music. A
+defense-in-depth heuristic flags long quoted passages, stanza-like multiline
+text, and repeated substantive lines before future model requests. Blocked
+results include rewrite guidance that helps an artist describe the transition,
+register, rhythm, dynamics, or other practice challenge in their own words.
+
+Passing this check is a risk-reduction signal, not proof of copyright status,
+non-infringement, or legal compliance. The check cannot provide legal advice.
 
 ## Requirements
 
