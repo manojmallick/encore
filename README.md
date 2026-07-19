@@ -22,9 +22,9 @@ product and delivery specification.
 
 ## Current release
 
-`v0.9.0` adds a creator dashboard and recording decision flow. Countdown,
-session progress, weak sections, mastery, and readiness now form one hierarchy,
-and artists can persist a confirmed keep-practicing or recorded decision.
+`v0.10.0` adds lyric-safe Making Of caption generation with GPT-5.6. Once a
+song is recorded, Encore turns its validated Song Map and practice history into
+a short caption that can be copied or regenerated without sending lyrics.
 Continuous integration, metadata, and baseline test tooling support the OpenAI
 Build Week 2026 Apps for Your Life submission.
 
@@ -100,6 +100,21 @@ latest validated decision is stored in a separate versioned browser-local key.
 A recorded decision freezes plan generation and practice logging while keeping
 all history available for the upcoming Making Of caption; returning to practice
 is reversible. Publishing remains part of the later record-to-publish release.
+
+## Making Of captions
+
+Recorded songs unlock a caption workspace backed by the OpenAI Responses API
+and strict structured output. The request uses GPT-5.6 with explicit low
+reasoning effort and low text verbosity. Encore derives the prompt from the
+artist's Song Map, section confidence history, trends, and optional structural
+practice observations.
+
+Every Song Map note and practice observation is lyric-risk checked before the
+request. The returned caption is schema-validated and checked again before it
+reaches the browser. Successful captions display the same lyric-risk
+confirmation as practice plans and can be copied or regenerated. This is a
+defense-in-depth product safeguard, not a copyright determination or legal
+advice.
 
 ## Requirements
 

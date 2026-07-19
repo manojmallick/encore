@@ -25,7 +25,7 @@ const SongSectionSchema = z
   })
   .strict();
 
-const SongMapSchema = z
+export const SongMapSchema = z
   .object({
     id: z.uuid(),
     title: z.string().trim().min(1).max(120),

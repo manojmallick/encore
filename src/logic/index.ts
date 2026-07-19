@@ -24,6 +24,7 @@ export {
   PracticePlanOutputError,
   PracticePlanRequestSchema,
   PracticeSessionSchema,
+  SongMapSchema,
   buildPracticePlanPrompts,
   calculateCountdownFacts,
   generateCountdownPracticePlan,
@@ -36,6 +37,29 @@ export {
   type PracticePlanRequest,
   type PracticeSession,
 } from "./practice-plan";
+export {
+  MAKING_OF_CAPTION_MODEL,
+  GeneratedMakingOfCaptionSchema,
+  MakingOfCaptionConfigurationError,
+  MakingOfCaptionInputError,
+  MakingOfCaptionModelError,
+  MakingOfCaptionModelOutputSchema,
+  MakingOfCaptionOutputError,
+  MakingOfCaptionRequestSchema,
+  buildMakingOfCaptionPrompts,
+  generateMakingOfCaption,
+  type GeneratedMakingOfCaption,
+  type MakingOfCaptionInputErrorCode,
+  type MakingOfCaptionModelGenerator,
+  type MakingOfCaptionModelOutput,
+  type MakingOfCaptionModelRequest,
+  type MakingOfCaptionRequest,
+} from "./making-of-caption";
+export {
+  MakingOfCaptionRequestError,
+  requestMakingOfCaption,
+  type MakingOfCaptionFetch,
+} from "./making-of-caption-client";
 export {
   INITIAL_PRACTICE_PLAN_STATE,
   PracticePlanRequestError,
