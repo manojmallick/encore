@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useReducer, useState, type FormEvent } from "react";
 
 import { CreatorDashboard } from "./creator-dashboard";
+import { MakingOfCaption } from "./making-of-caption";
 
 import {
   DEMO_SONG_MAP,
@@ -428,6 +429,14 @@ export function CountdownWorkspace() {
                     saveRecordingDecision("recorded", acknowledged)
                   }
                   onReturnToPractice={() => saveRecordingDecision("keep_practicing", false)}
+                />
+              )}
+
+              {isRecorded && recordingDecision && (
+                <MakingOfCaption
+                  songMap={DEMO_SONG_MAP}
+                  practiceLogs={practiceLogs}
+                  recordingDecision={recordingDecision}
                 />
               )}
 
