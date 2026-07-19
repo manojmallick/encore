@@ -22,11 +22,11 @@ product and delivery specification.
 
 ## Current release
 
-`v0.13.0` hardens Encore's calendar, validation, and generation failure
-boundaries. Countdown and readiness dates now share strict UTC calendar-day
-arithmetic, invalid browser inputs are rejected before a request, and API
-responses use stable, sanitized 400, 422, 500, and 502 contracts for invalid
-data, lyric risk, missing configuration, and generation failures.
+`v0.14.0` polishes the responsive judge-facing demo and makes accessibility a
+tested release contract. The full golden path now has a keyboard skip link,
+visible light/dark focus indicators, focus management for expanding workflows,
+semantic lists and metrics, comfortable touch targets, AA contrast, reduced
+motion support, and overflow checks from 320px through large desktop layouts.
 Continuous integration, metadata, and baseline test tooling support the OpenAI
 Build Week 2026 Apps for Your Life submission.
 
@@ -180,10 +180,13 @@ pnpm test:e2e
 pnpm build
 ```
 
-The recorded `v0.13.0` baseline is **126 passing unit/integration tests across
-20 files plus 1 passing Chromium golden-path test**. CI installs Chromium and
-runs both suites; API and model behavior is replaced with deterministic test
-doubles, so verification never requires an OpenAI API key.
+The recorded `v0.14.0` baseline is **126 passing unit/integration tests across
+20 files plus 1 passing Chromium golden-path test**. The browser test performs
+WCAG 2.0, 2.1, and 2.2 A/AA axe scans in empty and published states, verifies
+keyboard focus transitions, and checks responsive overflow at 320, 390, 768,
+and 1440 pixels. CI installs Chromium and runs both suites; API and model
+behavior is replaced with deterministic test doubles, so verification never
+requires an OpenAI API key.
 
 ## Deploy
 

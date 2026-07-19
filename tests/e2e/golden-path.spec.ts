@@ -1,7 +1,36 @@
-import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test, type Page } from "@playwright/test";
 
 const CAPTION =
   "I focused on the Chorus transition until it felt controlled in a full run. Here is my recorded cover of Dreams.";
+
+async function expectNoSeriousAccessibilityViolations(page: Page) {
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"])
+    .analyze();
+  const blocking = results.violations.filter(
+    (violation) => violation.impact === "serious" || violation.impact === "critical",
+  );
+
+  expect(
+    blocking,
+    blocking
+      .map(
+        (violation) =>
+          `${violation.id}: ${violation.help}\n${violation.nodes
+            .map((node) => `  ${node.target.join(" ")}: ${node.failureSummary}`)
+            .join("\n")}`,
+      )
+      .join("\n\n"),
+  ).toEqual([]);
+}
+
+async function expectNoHorizontalOverflow(page: Page) {
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(0);
+}
 
 test("completes, restores, and reopens the record-to-publish golden path", async ({
   page,
@@ -52,12 +81,24 @@ test("completes, restores, and reopens the record-to-publish golden path", async
   await page.evaluate(() => window.localStorage.clear());
   await page.reload();
 
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expectNoHorizontalOverflow(page);
+  await expectNoSeriousAccessibilityViolations(page);
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Skip to practice workspace" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#plan-workspace")).toBeFocused();
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+
   await page.getByRole("button", { name: "Generate practice plan" }).click();
   await expect(page.getByRole("heading", { name: "Your route to record day." })).toBeVisible();
 
   const firstSession = page.locator(".session-card").first();
   await firstSession.getByRole("button", { name: "Log practice" }).click();
-  await firstSession.getByLabel("Section practiced").selectOption({ label: "Chorus" });
+  const sectionSelect = firstSession.getByLabel("Section practiced");
+  await expect(sectionSelect).toBeFocused();
+  await sectionSelect.selectOption({ label: "Chorus" });
   await firstSession.getByText("4", { exact: true }).click();
   await firstSession
     .getByLabel("Structural note optional")
@@ -67,6 +108,7 @@ test("completes, restores, and reopens the record-to-publish golden path", async
 
   await page.getByRole("button", { name: "Review recording decision" }).click();
   const override = page.getByText(/the artistic decision is mine/i);
+  await expect(page.getByRole("checkbox", { name: /the artistic decision is mine/i })).toBeFocused();
   await override.click();
   await page.getByRole("button", { name: "Confirm song recorded" }).click();
   await expect(page.getByText("Dreams is marked recorded")).toBeVisible();
@@ -76,6 +118,11 @@ test("completes, restores, and reopens the record-to-publish golden path", async
   await page.getByRole("button", { name: "Finish publish step" }).click();
 
   const markPublished = page.getByRole("button", { name: "Mark song published" });
+  await expect(
+    page.getByRole("checkbox", {
+      name: "I posted this recorded cover and its caption outside Encore.",
+    }),
+  ).toBeFocused();
   await expect(markPublished).toBeDisabled();
   await page
     .getByText("I posted this recorded cover and its caption outside Encore.")
@@ -87,6 +134,14 @@ test("completes, restores, and reopens the record-to-publish golden path", async
   const completedPath = page.getByRole("list", { name: "Completed Encore golden path" });
   for (const step of ["Map", "Plan", "Practice", "Record", "Publish"]) {
     await expect(completedPath.getByText(step, { exact: true })).toBeVisible();
+  }
+  await expectNoSeriousAccessibilityViolations(page);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expectNoHorizontalOverflow(page);
+    if (width === 390) {
+      await expectNoSeriousAccessibilityViolations(page);
+    }
   }
 
   await page.reload();
