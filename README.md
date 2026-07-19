@@ -22,10 +22,9 @@ product and delivery specification.
 
 ## Current release
 
-`v0.7.0` adds per-section practice logging and deterministic mastery trends to
-the countdown workspace. Artists can attach a 1–5 confidence rating and an
-optional lyric-safe structural note to any planned session, then see improving,
-flat, declining, or insufficient-data status for every mapped section.
+`v0.8.0` adds transparent recording readiness to the countdown workspace.
+Encore now combines section confidence, declining trends, and elapsed plan time
+into an explained `insufficient_data`, `behind`, `on_track`, or `ready` result.
 Continuous integration, metadata, and baseline test tooling support the OpenAI
 Build Week 2026 Apps for Your Life submission.
 
@@ -71,6 +70,21 @@ most recent three, and compares the first confidence level with the last. A
 positive delta is `improving`, zero is `flat`, and a negative delta is
 `declining`. These outputs form the input for the later recording-readiness
 release.
+
+## Recording readiness
+
+Readiness is recalculated from the current countdown and practice logs; it is
+never separately persisted. Encore withholds the numeric score until every
+mapped section has at least one confidence rating. This prevents missing
+sections from silently appearing as zero confidence or, worse, being ignored.
+
+With complete coverage, the score starts with average confidence as a
+percentage and subtracts eight points for every declining section. `behind`
+takes precedence when confidence is more than 1.2 points below the level
+expected from elapsed plan time or when at least two sections decline. `ready`
+requires at least 4/5 average confidence, no declining sections, and no more
+than two days remaining. Every result displays the coverage, average, elapsed
+time, expected confidence, gap, decline count, and threshold reasons used.
 
 ## Requirements
 

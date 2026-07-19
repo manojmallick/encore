@@ -8,6 +8,8 @@ import {
   INITIAL_PRACTICE_PLAN_STATE,
   PracticeLogInputError,
   PracticePlanRequestError,
+  calculateCalendarDaysRemaining,
+  calculateRecordingReadiness,
   computeSectionTrends,
   createPracticeLogEntry,
   persistPracticePlan,
@@ -18,6 +20,7 @@ import {
   restorePracticeLogs,
   type ConfidenceLevel,
   type PracticeLogEntry,
+  type RecordingReadinessStatus,
   type SectionTrendDirection,
 } from "@/src/logic";
 
@@ -37,6 +40,13 @@ const TREND_LABELS: Record<SectionTrendDirection, string> = {
   flat: "Holding steady",
   declining: "Needs attention",
   insufficient_data: "More data needed",
+};
+
+const READINESS_LABELS: Record<RecordingReadinessStatus, string> = {
+  insufficient_data: "Need more data",
+  behind: "Behind",
+  on_track: "On track",
+  ready: "Ready",
 };
 
 export function CountdownWorkspace() {
@@ -68,6 +78,17 @@ export function CountdownWorkspace() {
       ),
     [practiceLogs],
   );
+  const recordingReadiness = useMemo(() => {
+    if (state.phase !== "success") {
+      return null;
+    }
+
+    return calculateRecordingReadiness({
+      sectionTrends,
+      daysRemaining: calculateCalendarDaysRemaining(DEMO_SONG_MAP.targetDate, new Date()),
+      originalPlanDays: state.plan.daysRemaining,
+    });
+  }, [sectionTrends, state]);
 
   useEffect(() => {
     let active = true;
@@ -303,7 +324,9 @@ export function CountdownWorkspace() {
                 </div>
                 <div className="plan-metrics" aria-label="Countdown summary">
                   <div>
-                    <strong>{state.plan.daysRemaining}</strong>
+                    <strong>
+                      {recordingReadiness?.factors.daysRemaining ?? state.plan.daysRemaining}
+                    </strong>
                     <span>days left</span>
                   </div>
                   <div>
@@ -319,6 +342,81 @@ export function CountdownWorkspace() {
                   ? "Saved in this browser"
                   : "Plan available for this visit; browser storage is unavailable"}
               </p>
+
+              {recordingReadiness && (
+                <section
+                  className={`readiness-card readiness-${recordingReadiness.status}`}
+                  aria-labelledby="readiness-heading"
+                >
+                  <div className="readiness-summary">
+                    <div>
+                      <p className="eyebrow">Recording readiness</p>
+                      <span className="readiness-badge">
+                        {READINESS_LABELS[recordingReadiness.status]}
+                      </span>
+                      <h3 id="readiness-heading">{recordingReadiness.title}</h3>
+                      <p>{recordingReadiness.message}</p>
+                    </div>
+                    <div className="readiness-score" aria-label={
+                      recordingReadiness.score === null
+                        ? "Readiness score unavailable until every section has data"
+                        : `Readiness score ${recordingReadiness.score} out of 100`
+                    }>
+                      <strong>{recordingReadiness.score ?? "—"}</strong>
+                      <span>{recordingReadiness.score === null ? "No score yet" : "/ 100"}</span>
+                    </div>
+                  </div>
+
+                  <ul className="readiness-reasons" aria-label="Why this readiness result">
+                    {recordingReadiness.reasons.map((reason) => (
+                      <li key={reason}>{reason}</li>
+                    ))}
+                  </ul>
+
+                  <dl className="readiness-factors">
+                    <div>
+                      <dt>Coverage</dt>
+                      <dd>
+                        {recordingReadiness.factors.measuredSections}/
+                        {recordingReadiness.factors.totalSections} sections
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Avg confidence</dt>
+                      <dd>
+                        {recordingReadiness.factors.averageConfidence === null
+                          ? "—"
+                          : `${recordingReadiness.factors.averageConfidence}/5`}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Time used</dt>
+                      <dd>{recordingReadiness.factors.timeUsedPercent}%</dd>
+                    </div>
+                    <div>
+                      <dt>Expected now</dt>
+                      <dd>{recordingReadiness.factors.expectedConfidence}/5</dd>
+                    </div>
+                    <div>
+                      <dt>Confidence gap</dt>
+                      <dd>
+                        {recordingReadiness.factors.confidenceGap === null
+                          ? "—"
+                          : recordingReadiness.factors.confidenceGap}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Declining</dt>
+                      <dd>{recordingReadiness.factors.decliningSections} sections</dd>
+                    </div>
+                  </dl>
+
+                  <p className="readiness-formula">
+                    Score = average confidence ÷ 5 × 100 − 8 points per declining section.
+                    Behind triggers above a 1.2 confidence gap or at two declining sections.
+                  </p>
+                </section>
+              )}
 
               <section className="mastery-section" aria-labelledby="mastery-heading">
                 <div className="mastery-heading-row">
