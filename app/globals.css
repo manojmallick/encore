@@ -18,6 +18,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 24px;
 }
 
 body {
@@ -30,21 +31,52 @@ body {
 }
 
 button,
-select {
+select,
+input,
+textarea {
   font: inherit;
 }
 
 button,
 a,
-select {
+select,
+input,
+textarea {
   -webkit-tap-highlight-color: transparent;
 }
 
 button:focus-visible,
 a:focus-visible,
-select:focus-visible {
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[tabindex="-1"]:focus-visible {
   outline: 3px solid var(--ink);
   outline-offset: 3px;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 1000;
+  top: 12px;
+  left: 12px;
+  padding: 11px 15px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform 160ms ease;
+}
+
+.skip-link:focus-visible {
+  outline-color: var(--lime);
+  transform: translateY(0);
 }
 
 .app-shell {
@@ -59,7 +91,9 @@ select:focus-visible {
 
 .wordmark {
   color: var(--ink);
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-family: "Manrope", sans-serif;
   font-size: 1.35rem;
   font-weight: 800;
@@ -192,9 +226,12 @@ select:focus-visible {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.section-list span {
+.section-list li {
   padding: 8px 12px;
   border: 1px solid var(--line);
   border-radius: 99px;
@@ -217,6 +254,7 @@ select:focus-visible {
 
 .frequency-control select {
   width: 100%;
+  min-height: 48px;
   padding: 13px 14px;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -257,7 +295,7 @@ select:focus-visible {
 
 .privacy-note {
   margin: 12px 0 0;
-  color: #7a847d;
+  color: var(--muted);
   font-size: 0.72rem;
   line-height: 1.5;
   text-align: center;
@@ -268,6 +306,10 @@ select:focus-visible {
   background:
     linear-gradient(rgba(255, 253, 247, 0.91), rgba(255, 253, 247, 0.91)),
     repeating-linear-gradient(90deg, transparent 0 54px, rgba(23, 33, 27, 0.04) 55px);
+}
+
+.plan-panel:focus-visible {
+  outline-offset: -5px;
 }
 
 .state-card {
@@ -311,6 +353,7 @@ select:focus-visible {
 
 .text-action {
   align-self: flex-start;
+  min-height: 44px;
   margin-top: 30px;
   padding: 0 0 7px;
   border: 0;
@@ -410,13 +453,17 @@ select:focus-visible {
   text-align: center;
 }
 
-.plan-metrics strong {
+.plan-metrics dd {
+  grid-row: 1;
+  margin: 0;
   font-family: "Manrope", sans-serif;
   font-size: 1.8rem;
+  font-weight: 800;
   letter-spacing: -0.05em;
 }
 
-.plan-metrics span {
+.plan-metrics dt {
+  grid-row: 2;
   color: var(--muted);
   font-size: 0.72rem;
   text-transform: uppercase;
@@ -507,7 +554,7 @@ select:focus-visible {
 
 .dashboard-metrics dt,
 .dashboard-panel-label {
-  color: #7b857e;
+  color: #5d6a61;
   font-size: 0.64rem;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -595,6 +642,7 @@ select:focus-visible {
 }
 
 .review-decision-button {
+  min-height: 44px;
   margin-top: auto;
   padding: 9px 0 5px;
   border: 0;
@@ -624,7 +672,8 @@ select:focus-visible {
 }
 
 .decision-flow-heading button {
-  padding: 0;
+  min-height: 44px;
+  padding: 0 4px;
   border: 0;
   border-bottom: 1px solid currentColor;
   background: transparent;
@@ -653,7 +702,7 @@ select:focus-visible {
 
 .decision-actions button {
   flex: 1;
-  min-height: 40px;
+  min-height: 44px;
   padding: 9px 11px;
   border-radius: 8px;
   cursor: pointer;
@@ -729,6 +778,7 @@ select:focus-visible {
 }
 
 .recorded-decision button {
+  min-height: 44px;
   padding: 0 0 3px;
   border: 0;
   border-bottom: 1px solid currentColor;
@@ -821,7 +871,7 @@ select:focus-visible {
 
 .readiness-score span {
   margin-top: 7px;
-  color: rgba(255, 255, 255, 0.58);
+  color: rgba(255, 255, 255, 0.68);
   font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -870,7 +920,7 @@ select:focus-visible {
 }
 
 .readiness-factors dt {
-  color: rgba(255, 255, 255, 0.47);
+  color: rgba(255, 255, 255, 0.64);
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -887,7 +937,7 @@ select:focus-visible {
 
 .readiness-formula {
   margin: 16px 0 0;
-  color: rgba(255, 255, 255, 0.48);
+  color: rgba(255, 255, 255, 0.68);
   font-size: 0.68rem;
   line-height: 1.55;
 }
@@ -997,7 +1047,7 @@ select:focus-visible {
 }
 
 .trend-card small {
-  color: #8a938c;
+  color: #5d6a61;
   font-size: 0.68rem;
 }
 
@@ -1008,7 +1058,7 @@ select:focus-visible {
 
 .trend-improving > span,
 .trend-improving strong {
-  color: #5f8200;
+  color: #557500;
 }
 
 .trend-declining {
@@ -1067,7 +1117,7 @@ select:focus-visible {
 }
 
 .session-index {
-  color: #8aa729;
+  color: #557500;
   font-family: "Manrope", sans-serif;
   font-size: 1.65rem;
   font-weight: 700;
@@ -1118,6 +1168,7 @@ select:focus-visible {
   display: inline-flex;
   gap: 7px;
   align-items: center;
+  min-height: 44px;
   margin-top: 18px;
   padding: 8px 12px;
   border: 1px solid var(--line);
@@ -1156,7 +1207,8 @@ select:focus-visible {
 }
 
 .log-form-heading button {
-  padding: 0;
+  min-height: 44px;
+  padding: 0 4px;
   border: 0;
   border-bottom: 1px solid currentColor;
   background: transparent;
@@ -1174,13 +1226,14 @@ select:focus-visible {
 }
 
 .practice-log-form label small {
-  color: #8a938c;
+  color: #5d6a61;
   font-weight: 500;
 }
 
 .practice-log-form select,
 .practice-log-form textarea {
   width: 100%;
+  min-height: 44px;
   padding: 11px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -1227,7 +1280,7 @@ select:focus-visible {
 .confidence-options span {
   display: grid;
   place-items: center;
-  min-height: 38px;
+  min-height: 44px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
@@ -1247,11 +1300,12 @@ select:focus-visible {
 
 .practice-log-form fieldset > small,
 .log-form-footer > small {
-  color: #8a938c;
+  color: #5d6a61;
   font-size: 0.66rem;
 }
 
 .log-form-footer button {
+  min-height: 44px;
   padding: 10px 14px;
   border: 1px solid var(--ink);
   border-radius: 8px;
@@ -1300,6 +1354,11 @@ select:focus-visible {
   border-radius: 50%;
   content: "";
   pointer-events: none;
+}
+
+.making-of-card button:focus-visible,
+.making-of-card input:focus-visible {
+  outline-color: #c8ff48;
 }
 
 .making-of-intro {
@@ -1429,7 +1488,7 @@ select:focus-visible {
 .publish-step > button,
 .confirm-published-button {
   flex: 0 0 auto;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 14px;
   border: 1px solid #c8ff48;
   border-radius: 8px;
@@ -1452,6 +1511,7 @@ select:focus-visible {
 }
 
 .publish-confirmation-heading button {
+  min-height: 44px;
   border: 0;
   background: transparent;
   color: #b7c0ba;
@@ -1554,7 +1614,7 @@ select:focus-visible {
 .published-completion li small {
   overflow: hidden;
   color: #909b93;
-  font-size: 0.58rem;
+  font-size: 0.66rem;
   line-height: 1.35;
   text-overflow: ellipsis;
 }
@@ -1586,7 +1646,7 @@ select:focus-visible {
   gap: 8px;
   align-items: center;
   justify-content: center;
-  min-height: 43px;
+  min-height: 44px;
   padding: 0 17px;
   border-radius: 9px;
   cursor: pointer;
@@ -1677,15 +1737,23 @@ select:focus-visible {
 
 @media (max-width: 600px) {
   .app-shell {
-    padding-inline: 14px;
+    padding: 20px 12px 40px;
   }
 
   .hero-copy {
-    margin: 46px 4px 34px;
+    gap: 28px;
+    margin: 38px 6px 28px;
   }
 
   .hero h1 {
-    font-size: clamp(2.7rem, 15vw, 4.3rem);
+    font-size: clamp(2.55rem, 12.5vw, 3.5rem);
+    letter-spacing: -0.065em;
+    line-height: 0.98;
+  }
+
+  .hero-description {
+    font-size: 1rem;
+    line-height: 1.55;
   }
 
   .workspace-grid {
@@ -1723,6 +1791,11 @@ select:focus-visible {
     padding: 26px 18px;
   }
 
+  .state-card {
+    min-height: 460px;
+    padding: 34px 20px;
+  }
+
   .making-of-intro {
     align-items: flex-start;
     flex-direction: column;
@@ -1739,7 +1812,7 @@ select:focus-visible {
 
   .caption-actions {
     align-items: stretch;
-    flex-direction: column-reverse;
+    flex-direction: column;
   }
 
   .publish-step {
@@ -1805,7 +1878,7 @@ select:focus-visible {
   }
 
   .practice-log-form {
-    margin-left: -60px;
+    margin-left: 0;
     padding: 16px;
   }
 
@@ -1817,6 +1890,25 @@ select:focus-visible {
   .state-number {
     top: 28px;
     right: 28px;
+  }
+}
+
+@media (max-width: 380px) {
+  .app-shell {
+    padding-inline: 10px;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.35rem, 12.5vw, 3rem);
+  }
+
+  .song-panel,
+  .plan-content {
+    padding-inline: 22px;
+  }
+
+  .session-card {
+    grid-template-columns: 38px minmax(0, 1fr);
   }
 }
 

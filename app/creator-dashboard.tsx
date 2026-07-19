@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type {
   CreatorDashboardSnapshot,
@@ -52,8 +52,18 @@ export function CreatorDashboard({
 }: CreatorDashboardProps) {
   const [showDecisionFlow, setShowDecisionFlow] = useState(false);
   const [acknowledgedNotReady, setAcknowledgedNotReady] = useState(false);
+  const decisionFlowRef = useRef<HTMLDivElement>(null);
   const isRecorded = decision?.decision === "recorded";
   const requiresOverride = readiness.status !== "ready";
+
+  useEffect(() => {
+    if (showDecisionFlow) {
+      const target =
+        decisionFlowRef.current?.querySelector<HTMLElement>("input") ??
+        decisionFlowRef.current?.querySelector<HTMLElement>("button");
+      target?.focus();
+    }
+  }, [showDecisionFlow]);
 
   function closeDecisionFlow() {
     setShowDecisionFlow(false);
@@ -162,7 +172,7 @@ export function CreatorDashboard({
               </div>
             </div>
           ) : showDecisionFlow ? (
-            <div className="recording-decision-flow">
+            <div className="recording-decision-flow" ref={decisionFlowRef}>
               <div className="decision-flow-heading">
                 <strong>Make the recording call</strong>
                 <button type="button" onClick={closeDecisionFlow}>Cancel</button>

@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useReducer, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 
 import { CreatorDashboard } from "./creator-dashboard";
 import { MakingOfCaption } from "./making-of-caption";
@@ -75,6 +82,7 @@ export function CountdownWorkspace() {
   );
   const [practiceLogs, setPracticeLogs] = useState<readonly PracticeLogEntry[]>([]);
   const [activeLogSession, setActiveLogSession] = useState<number | null>(null);
+  const practiceLogFormRef = useRef<HTMLFormElement>(null);
   const [selectedSectionId, setSelectedSectionId] = useState<string>(
     DEMO_SONG_MAP.sections[0]!.id,
   );
@@ -163,6 +171,12 @@ export function CountdownWorkspace() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (activeLogSession !== null) {
+      practiceLogFormRef.current?.querySelector("select")?.focus();
+    }
+  }, [activeLogSession]);
 
   async function generatePlan() {
     if (state.phase === "loading" || isRecorded) {
@@ -319,6 +333,9 @@ export function CountdownWorkspace() {
 
   return (
     <main className="app-shell" aria-busy={isLoading}>
+      <a className="skip-link" href="#plan-workspace">
+        Skip to practice workspace
+      </a>
       <header className="hero">
         <a className="wordmark" href="#top" aria-label="Encore home">
           Encore<span aria-hidden="true">.</span>
@@ -353,11 +370,11 @@ export function CountdownWorkspace() {
             </div>
           </dl>
 
-          <div className="section-list" aria-label="Mapped song sections">
+          <ul className="section-list" aria-label="Mapped song sections">
             {DEMO_SONG_MAP.sections.map((section) => (
-              <span key={section.id}>{section.name}</span>
+              <li key={section.id}>{section.name}</li>
             ))}
-          </div>
+          </ul>
 
           <label className="frequency-control" htmlFor="sessions-per-week">
             <span>Practice rhythm</span>
@@ -400,7 +417,13 @@ export function CountdownWorkspace() {
           </p>
         </aside>
 
-        <section className="plan-panel" aria-labelledby="plan-heading" aria-live="polite">
+        <section
+          className="plan-panel"
+          id="plan-workspace"
+          tabIndex={-1}
+          aria-labelledby="plan-heading"
+          aria-live="polite"
+        >
           {state.phase === "hydrating" && (
             <div className="state-card compact-state">
               <span className="spinner dark" aria-hidden="true" />
@@ -453,21 +476,24 @@ export function CountdownWorkspace() {
                   <p className="eyebrow">Practice countdown</p>
                   <h2 id="plan-heading">Your route to record day.</h2>
                 </div>
-                <div className="plan-metrics" aria-label="Countdown summary">
+                <dl className="plan-metrics" aria-label="Countdown summary">
                   <div>
-                    <strong>
+                    <dt>Days left</dt>
+                    <dd>
                       {recordingReadiness?.factors.daysRemaining ?? state.plan.daysRemaining}
-                    </strong>
-                    <span>days left</span>
+                    </dd>
                   </div>
                   <div>
-                    <strong>{state.plan.totalSessions}</strong>
-                    <span>sessions</span>
+                    <dt>Sessions</dt>
+                    <dd>{state.plan.totalSessions}</dd>
                   </div>
-                </div>
+                </dl>
               </div>
 
-              <p className={`save-status ${persistenceStatus === "unavailable" ? "warning" : ""}`}>
+              <p
+                className={`save-status ${persistenceStatus === "unavailable" ? "warning" : ""}`}
+                role="status"
+              >
                 <span aria-hidden="true">{persistenceStatus === "saved" ? "✓" : "○"}</span>
                 {persistenceStatus === "saved"
                   ? "Saved in this browser"
@@ -657,6 +683,7 @@ export function CountdownWorkspace() {
                         {!isRecorded && activeLogSession === session.sessionNumber ? (
                           <form
                             className="practice-log-form"
+                            ref={practiceLogFormRef}
                             onSubmit={(event) => submitPracticeLog(event, session.sessionNumber)}
                           >
                             <div className="log-form-heading">

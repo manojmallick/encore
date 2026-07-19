@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   MakingOfCaptionRequestError,
@@ -48,8 +48,15 @@ export function MakingOfCaption({
   const [copyStatus, setCopyStatus] = useState<"copied" | "error" | null>(null);
   const [showPublishFlow, setShowPublishFlow] = useState(false);
   const [confirmedExternalPost, setConfirmedExternalPost] = useState(false);
+  const publishConfirmationRef = useRef<HTMLDivElement>(null);
   const hasPracticeHistory = practiceLogs.length > 0;
   const isPublished = publication?.status === "published";
+
+  useEffect(() => {
+    if (showPublishFlow) {
+      publishConfirmationRef.current?.querySelector("input")?.focus();
+    }
+  }, [showPublishFlow]);
 
   function formatPublishedDate(value: string): string {
     return new Intl.DateTimeFormat("en", {
@@ -179,7 +186,7 @@ export function MakingOfCaption({
               </button>
             </>
           ) : (
-            <div className="publish-confirmation">
+            <div className="publish-confirmation" ref={publishConfirmationRef}>
               <div className="publish-confirmation-heading">
                 <strong>Confirm external publish</strong>
                 <button type="button" onClick={() => setShowPublishFlow(false)}>Cancel</button>
