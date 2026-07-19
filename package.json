@@ -1,6 +1,6 @@
 {
   "name": "encore",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "A song-to-publish practice planner for independent cover artists.",
   "packageManager": "pnpm@10.33.2",
@@ -20,8 +20,10 @@
   },
   "dependencies": {
     "next": "^16.0.0",
+    "openai": "^6.48.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
