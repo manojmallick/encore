@@ -84,11 +84,11 @@ server with `Ctrl+C`.
 
 ## Verified test baseline
 
-The `v0.15.0` release gate records these real Vitest and Playwright results:
+The `v0.16.0` release gate records these real Vitest and Playwright results:
 
 | Scope | Command | Expected result |
 |---|---|---:|
-| Unit and integration | `pnpm test` | 126 tests in 20 files |
+| Unit and integration | `pnpm test` | 137 tests in 22 files |
 | Recording readiness | `pnpm exec vitest run src/logic/recording-readiness.test.ts --reporter=json` | 11 tests |
 | Lyric Firewall | `pnpm exec vitest run src/logic/lyric-risk.test.ts --reporter=json` | 12 tests |
 | Browser golden path | `pnpm test:e2e` | 1 Chromium test |
@@ -118,6 +118,49 @@ Use this only with a configured key and network access:
 
 The live plan and caption calls are evidence to capture in the submission
 video. They are not part of the deterministic release baseline.
+
+## Production deployment smoke test
+
+The verified production origin is <https://encore-sigma-ten.vercel.app>.
+
+The production runner does not start a local server and fails before opening a
+browser unless `ENCORE_SMOKE_BASE_URL` is an absolute HTTPS origin on a
+non-local host. Configure Vercel first:
+
+1. Link the public GitHub repository to a Vercel project or deploy it with the
+   Vercel CLI.
+2. Select Node.js 24 and keep the repository root as the project root.
+3. Set `NEXT_PUBLIC_SITE_URL` to the final production origin, without a path,
+   query, or fragment.
+4. Set the server-only `OPENAI_API_KEY` for live GPT-5.6 features.
+5. Deploy the exact commit intended for submission.
+
+Then run:
+
+```bash
+ENCORE_SMOKE_BASE_URL=https://encore-sigma-ten.vercel.app pnpm test:smoke
+```
+
+The smoke test verifies HTTPS delivery, canonical metadata, security headers,
+immutable `/_next/static/` caching, and the complete map-to-publish flow in a
+clean Chromium context. Plan and caption requests are intercepted with the same
+deterministic fixtures as the local golden path; this proves the deployed UI
+contract without spending API credits. Capture separate live GPT-5.6 plan and
+caption requests for the demo evidence gate.
+
+If Vercel Deployment Protection is enabled, keep the automation secret outside
+the repository:
+
+```bash
+export VERCEL_AUTOMATION_BYPASS_SECRET=replace-with-local-secret
+ENCORE_SMOKE_BASE_URL=https://encore.example.com pnpm test:smoke
+```
+
+GitHub Actions also exposes a manual `production-smoke` workflow. Supply the
+production origin as its required input and configure
+`VERCEL_AUTOMATION_BYPASS_SECRET` as a repository or environment secret only
+when protection is enabled. Record the successful workflow URL and tested
+commit in the evidence ledger.
 
 ## Troubleshooting
 

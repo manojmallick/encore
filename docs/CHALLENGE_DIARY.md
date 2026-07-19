@@ -80,10 +80,23 @@ published states, focus transitions, and overflow at four viewport widths.
 Evidence: [issue #27](https://github.com/manojmallick/encore/issues/27) and
 [PR #28](https://github.com/manojmallick/encore/pull/28).
 
+## July 19 — Make deployment a testable release boundary
+
+A successful local build did not prove that Vercel used the pinned package
+manager, emitted the intended headers, served canonical metadata, or supported
+the complete browser workflow. The deployment release added a separate runner
+that refuses implicit localhost, checks the HTTPS response and immutable assets,
+and reuses the exact local golden path against the production origin. The real
+deployment at <https://encore-sigma-ten.vercel.app> passed that smoke before the
+URL was marked verified.
+
+Evidence: [issue #31](https://github.com/manojmallick/encore/issues/31),
+[`vercel.ts`](../vercel.ts), and the manual `production-smoke` workflow.
+
 ## What remains before submission
 
 Repository history proves the ordered implementation and review trail. It does
-not prove a live GPT-5.6 request, deployed URL, recorded video, or a Codex
-`/feedback` session identifier. Those artifacts must be captured during the
-final deployment/demo release and recorded in the
+not prove a live GPT-5.6 request, recorded video, or a Codex `/feedback` session
+identifier. Those artifacts must be captured during the final demo release and
+recorded in the
 [Build Week evidence ledger](./BUILD_WEEK_SUBMISSION.md#evidence-ledger).

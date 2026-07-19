@@ -108,5 +108,9 @@ outside the Build Week scope.
 
 Vitest injects model functions and clocks at domain/route seams. Playwright
 intercepts both API routes to exercise the complete browser lifecycle without a
-key or network charge. See [Reproduce Encore](./REPRODUCIBILITY.md) for exact
-commands and recorded counts.
+key or network charge. The production Playwright configuration reuses that flow
+against an explicit HTTPS origin without starting a local server, then verifies
+canonical metadata, Vercel response headers, and immutable Next.js asset
+caching. An optional automation-bypass secret is read only from the runner
+environment. See [Reproduce Encore](./REPRODUCIBILITY.md) for exact commands and
+recorded counts.

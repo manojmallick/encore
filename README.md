@@ -22,11 +22,14 @@ product and delivery specification.
 
 ## Current release
 
-`v0.15.0` packages Encore as a reproducible Build Week submission. A clean-room
-setup guide, architecture map, evidence-grounded challenge diary, submission
-copy, demo runbook, and evidence ledger now describe the same tested product.
-Live-request, deployment, video, and Codex-session artifacts remain explicitly
-marked for capture instead of being represented by placeholders or estimates.
+`v0.16.0` makes production deployment testable. Vercel now uses a frozen pnpm
+install, the Next.js preset, the repository build command, immutable framework
+asset caching, and baseline security headers. A separate Playwright smoke
+runner requires an explicit HTTPS deployment, verifies the production shell
+and headers, and reuses the complete clean-browser golden path without starting
+localhost. The production URL is verified; live GPT-5.6 requests, video, and
+Codex-session artifacts remain explicitly marked for capture until their real
+evidence exists.
 
 ## Submission documentation
 
@@ -186,8 +189,8 @@ pnpm test:e2e
 pnpm build
 ```
 
-The recorded `v0.15.0` baseline is **126 passing unit/integration tests across
-20 files plus 1 passing Chromium golden-path test**. The browser test performs
+The recorded `v0.16.0` baseline is **137 passing unit/integration tests across
+22 files plus 1 passing local Chromium golden-path test**. The browser test performs
 WCAG 2.0, 2.1, and 2.2 A/AA axe scans in empty and published states, verifies
 keyboard focus transitions, and checks responsive overflow at 320, 390, 768,
 and 1440 pixels. CI installs Chromium and runs both suites; API and model
@@ -199,10 +202,28 @@ Lyric Firewall tests** after parameterized cases are expanded. Run the exact
 commands and see the counting method in the
 [reproducibility guide](./docs/REPRODUCIBILITY.md#verified-test-baseline).
 
-## Deploy
+## Deploy and smoke test
 
-Push to a Vercel-linked Git repository or run `vercel deploy`. The generated
-deployment configuration lives in [`vercel.ts`](./vercel.ts).
+Production: <https://encore-sigma-ten.vercel.app>
+
+Push to a Vercel-linked Git repository or run `vercel deploy`. The versioned
+configuration in [`vercel.ts`](./vercel.ts) pins the production install/build
+contract and response headers. In Vercel, set `NEXT_PUBLIC_SITE_URL` to the final
+HTTPS production origin and set the server-only `OPENAI_API_KEY` for the two live
+generation features.
+
+After the deployment is ready, run the clean-browser smoke test against its
+origin—never a path or localhost URL:
+
+```bash
+ENCORE_SMOKE_BASE_URL=https://encore-sigma-ten.vercel.app pnpm test:smoke
+```
+
+For a protected deployment, set `VERCEL_AUTOMATION_BYPASS_SECRET` in the shell
+or as a GitHub Actions secret. Do not put it in the command, URL, or repository.
+The manual `production-smoke` workflow accepts the production URL as an input.
+See the [reproducibility guide](./docs/REPRODUCIBILITY.md#production-deployment-smoke-test)
+for the release procedure and evidence rules.
 
 Product-specific logic belongs in `src/logic/`; Next.js pages and route
 handlers belong in `app/`.
