@@ -22,9 +22,10 @@ product and delivery specification.
 
 ## Current release
 
-`v0.1.0` provides the wrapper-generated Next.js and TypeScript foundation,
-continuous integration, metadata, and baseline test tooling for OpenAI Build
-Week 2026, Apps for Your Life track.
+`v0.2.0` adds the typed Song Map domain model and a deterministic, lyric-free
+demo fixture on top of the wrapper-generated Next.js and TypeScript foundation.
+Continuous integration, metadata, and baseline test tooling support the OpenAI
+Build Week 2026 Apps for Your Life submission.
 
 ## Requirements
 
