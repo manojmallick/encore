@@ -147,9 +147,20 @@ describe("recording readiness", () => {
   });
 
   it("rejects duplicate sections and inconsistent confidence coverage", () => {
+    expect(() => calculateRecordingReadiness(input({ sectionTrends: [] }))).toThrow();
     expect(() =>
       calculateRecordingReadiness(
         input({ sectionTrends: [trend(0, 3), trend(0, 4)] }),
+      ),
+    ).toThrow();
+    expect(() =>
+      calculateRecordingReadiness(
+        input({
+          sectionTrends: [
+            { ...trend(0, 3), latestConfidence: 6 },
+            ...DEMO_SONG_MAP.sections.slice(1).map((_, index) => trend(index + 1, 3)),
+          ],
+        }),
       ),
     ).toThrow();
     expect(() =>
@@ -183,5 +194,28 @@ describe("readiness calendar", () => {
     expect(
       calculateCalendarDaysRemaining("2026-07-18", new Date("2026-07-19T01:00:00.000Z")),
     ).toBe(0);
+  });
+
+  it("is invariant for equivalent timezone-offset instants", () => {
+    expect(
+      calculateCalendarDaysRemaining(
+        "2026-08-15",
+        new Date("2026-07-19T23:30:00-07:00"),
+      ),
+    ).toBe(
+      calculateCalendarDaysRemaining(
+        "2026-08-15",
+        new Date("2026-07-20T06:30:00.000Z"),
+      ),
+    );
+  });
+
+  it("rejects impossible target dates and invalid current clocks", () => {
+    expect(() =>
+      calculateCalendarDaysRemaining("2026-02-30", new Date("2026-01-01T00:00:00.000Z")),
+    ).toThrowError(expect.objectContaining({ code: "invalid_target_date" }));
+    expect(() =>
+      calculateCalendarDaysRemaining("2026-08-15", new Date(Number.NaN)),
+    ).toThrowError(expect.objectContaining({ code: "invalid_current_date" }));
   });
 });

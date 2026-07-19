@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { CalendarDateInputError, calendarDaysUntil } from "./calendar-date";
+
 import {
   LYRIC_RISK_PASSED_MESSAGE,
   enforceSongMapLyricRisk,
@@ -117,7 +119,11 @@ export interface CountdownFacts {
 
 export type GeneratedPracticePlan = z.infer<typeof GeneratedPracticePlanSchema>;
 
-export type PracticePlanInputErrorCode = "past_target_date" | "too_many_sessions";
+export type PracticePlanInputErrorCode =
+  | "invalid_target_date"
+  | "invalid_frequency"
+  | "past_target_date"
+  | "too_many_sessions";
 
 export class PracticePlanInputError extends Error {
   readonly code: PracticePlanInputErrorCode;
@@ -150,23 +156,31 @@ export class PracticePlanOutputError extends Error {
   }
 }
 
-const MILLISECONDS_PER_DAY = 86_400_000;
-
-function utcDay(date: Date): number {
-  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-}
-
-function targetUtcDay(targetDate: string): number {
-  const [year, month, day] = targetDate.split("-").map(Number);
-  return Date.UTC(year, month - 1, day);
-}
-
 export function calculateCountdownFacts(
   targetDate: string,
   sessionsPerWeek: number,
   now: Date,
 ): CountdownFacts {
-  const daysRemaining = Math.ceil((targetUtcDay(targetDate) - utcDay(now)) / MILLISECONDS_PER_DAY);
+  const parsedFrequency = z.number().int().min(1).max(7).safeParse(sessionsPerWeek);
+  if (!parsedFrequency.success) {
+    throw new PracticePlanInputError(
+      "invalid_frequency",
+      "Practice frequency must be a whole number from 1 through 7 sessions per week.",
+    );
+  }
+
+  let daysRemaining: number;
+  try {
+    daysRemaining = calendarDaysUntil(targetDate, now);
+  } catch (error) {
+    if (
+      error instanceof CalendarDateInputError &&
+      error.code === "invalid_target_date"
+    ) {
+      throw new PracticePlanInputError("invalid_target_date", error.message);
+    }
+    throw error;
+  }
 
   if (daysRemaining < 1) {
     throw new PracticePlanInputError(
@@ -175,7 +189,10 @@ export function calculateCountdownFacts(
     );
   }
 
-  const totalSessions = Math.max(1, Math.ceil((daysRemaining / 7) * sessionsPerWeek));
+  const totalSessions = Math.max(
+    1,
+    Math.ceil((daysRemaining / 7) * parsedFrequency.data),
+  );
   if (totalSessions > MAX_PRACTICE_SESSIONS) {
     throw new PracticePlanInputError(
       "too_many_sessions",

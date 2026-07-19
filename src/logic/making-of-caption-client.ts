@@ -41,7 +41,14 @@ export async function requestMakingOfCaption(
   input: MakingOfCaptionRequest,
   fetchCaption: MakingOfCaptionFetch = fetch,
 ): Promise<GeneratedMakingOfCaption> {
-  const request = MakingOfCaptionRequestSchema.parse(input);
+  const parsedRequest = MakingOfCaptionRequestSchema.safeParse(input);
+  if (!parsedRequest.success) {
+    throw new MakingOfCaptionRequestError(
+      "invalid_request",
+      "A recorded song with at least one valid practice entry is required before generating a caption.",
+    );
+  }
+  const request = parsedRequest.data;
   let response: Response;
 
   try {

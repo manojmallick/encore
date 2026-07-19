@@ -20,6 +20,8 @@ const ApiErrorSchema = z
 
 const ACTIONABLE_ERROR_CODES = new Set([
   "invalid_request",
+  "invalid_target_date",
+  "invalid_frequency",
   "past_target_date",
   "too_many_sessions",
   "lyric_risk_blocked",
@@ -50,7 +52,14 @@ export async function requestCountdownPracticePlan(
   input: PracticePlanRequest,
   fetchPlan: PracticePlanFetch = fetch,
 ): Promise<GeneratedPracticePlan> {
-  const request = PracticePlanRequestSchema.parse(input);
+  const parsedRequest = PracticePlanRequestSchema.safeParse(input);
+  if (!parsedRequest.success) {
+    throw new PracticePlanRequestError(
+      "invalid_request",
+      "Choose a valid future Song Map and a practice rhythm from 1 through 7 sessions per week.",
+    );
+  }
+  const request = parsedRequest.data;
   let response: Response;
 
   try {

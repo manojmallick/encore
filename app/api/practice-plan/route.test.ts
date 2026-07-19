@@ -14,6 +14,14 @@ function request(body: unknown): Request {
   });
 }
 
+function rawRequest(body: string): Request {
+  return new Request("http://localhost/api/practice-plan", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body,
+  });
+}
+
 function validBody() {
   return { songMap: DEMO_SONG_MAP, sessionsPerWeek: 2 };
 }
@@ -57,18 +65,52 @@ describe("POST /api/practice-plan", () => {
     expect(response.status).toBe(400);
     expect(await response.json()).toMatchObject({ error: { code: "invalid_request" } });
     expect(generateModelOutput).not.toHaveBeenCalled();
+
+    const malformed = await handler(generateModelOutput)(rawRequest("{not-json"));
+    expect(malformed.status).toBe(400);
+    expect(await malformed.json()).toMatchObject({ error: { code: "invalid_request" } });
+    expect(generateModelOutput).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 and skips the model for empty maps and invalid frequency", async () => {
+    const generateModelOutput = vi.fn();
+    const emptyMap = await handler(generateModelOutput)(
+      request({
+        ...validBody(),
+        songMap: { ...DEMO_SONG_MAP, sections: [] },
+      }),
+    );
+    const invalidFrequency = await handler(generateModelOutput)(
+      request({ ...validBody(), sessionsPerWeek: 2.5 }),
+    );
+
+    expect(emptyMap.status).toBe(400);
+    expect(invalidFrequency.status).toBe(400);
+    await expect(emptyMap.json()).resolves.toMatchObject({
+      error: { code: "invalid_request" },
+    });
+    await expect(invalidFrequency.json()).resolves.toMatchObject({
+      error: { code: "invalid_request" },
+    });
+    expect(generateModelOutput).not.toHaveBeenCalled();
   });
 
   it("returns 400 for an invalid countdown", async () => {
-    const response = await handler(vi.fn())(
-      request({
-        ...validBody(),
-        songMap: { ...DEMO_SONG_MAP, targetDate: "2026-07-18" },
-      }),
-    );
+    const generateModelOutput = vi.fn();
+    for (const targetDate of ["2026-07-18", "2026-07-19"]) {
+      const response = await handler(generateModelOutput)(
+        request({
+          ...validBody(),
+          songMap: { ...DEMO_SONG_MAP, targetDate },
+        }),
+      );
 
-    expect(response.status).toBe(400);
-    expect(await response.json()).toMatchObject({ error: { code: "past_target_date" } });
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({
+        error: { code: "past_target_date" },
+      });
+    }
+    expect(generateModelOutput).not.toHaveBeenCalled();
   });
 
   it("returns 422 with affected sections before model invocation", async () => {
@@ -106,7 +148,26 @@ describe("POST /api/practice-plan", () => {
     })(request(validBody()));
 
     expect(response.status).toBe(500);
-    expect(await response.json()).toMatchObject({ error: { code: "configuration_error" } });
+    expect(await response.json()).toEqual({
+      error: {
+        code: "configuration_error",
+        message: "Practice plan generation is not configured right now.",
+      },
+    });
+  });
+
+  it("returns a generic 500 when the server clock is invalid", async () => {
+    const generateModelOutput = vi.fn();
+    const response = await createPracticePlanPost({
+      generateModelOutput,
+      now: () => new Date(Number.NaN),
+    })(request(validBody()));
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      error: { code: "internal_error", message: "An unexpected server error occurred." },
+    });
+    expect(generateModelOutput).not.toHaveBeenCalled();
   });
 
   it("returns 502 for provider and output-contract failures", async () => {
@@ -114,10 +175,15 @@ describe("POST /api/practice-plan", () => {
       throw new PracticePlanModelError("provider failed");
     })(request(validBody()));
     const outputResponse = await handler(async () => output(1))(request(validBody()));
+    const missingOutputResponse = await handler(async () => null)(request(validBody()));
 
     expect(providerResponse.status).toBe(502);
     expect(await providerResponse.json()).toMatchObject({ error: { code: "generation_failed" } });
     expect(outputResponse.status).toBe(502);
     expect(await outputResponse.json()).toMatchObject({ error: { code: "generation_failed" } });
+    expect(missingOutputResponse.status).toBe(502);
+    expect(await missingOutputResponse.json()).toMatchObject({
+      error: { code: "generation_failed" },
+    });
   });
 });

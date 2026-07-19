@@ -50,7 +50,16 @@ describe("practice-plan domain service", () => {
     });
   });
 
-  it("rejects past dates and countdowns over the session cap", () => {
+  it("rejects invalid dates, current clocks, frequencies, and oversized countdowns", () => {
+    expect(() => calculateCountdownFacts("2026-02-30", 2, NOW)).toThrowError(
+      expect.objectContaining({ code: "invalid_target_date" }),
+    );
+    expect(() => calculateCountdownFacts("2026-08-15", 2, new Date(Number.NaN))).toThrowError(
+      expect.objectContaining({ code: "invalid_current_date" }),
+    );
+    expect(() => calculateCountdownFacts("2026-08-15", 2.5, NOW)).toThrowError(
+      expect.objectContaining({ code: "invalid_frequency" }),
+    );
     expect(() => calculateCountdownFacts("2026-07-19", 2, NOW)).toThrowError(
       PracticePlanInputError,
     );
@@ -58,6 +67,14 @@ describe("practice-plan domain service", () => {
       expect.objectContaining({ code: "too_many_sessions" }),
     );
     expect(MAX_PRACTICE_SESSIONS).toBe(24);
+  });
+
+  it("uses UTC calendar days for equivalent timezone-offset instants", () => {
+    expect(
+      calculateCountdownFacts("2026-08-15", 2, new Date("2026-07-19T23:30:00-07:00")),
+    ).toEqual(
+      calculateCountdownFacts("2026-08-15", 2, new Date("2026-07-20T06:30:00.000Z")),
+    );
   });
 
   it("builds a lean prompt that treats structural notes as data", () => {
