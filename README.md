@@ -20,9 +20,53 @@ gates, and ordered commit roadmap. See the
 [Apps for Your Life plan](./ENCORE_APPS_FOR_LIFE_PLAN.md) for the complete
 product and delivery specification.
 
-## Status
+## Current release
 
-Planning for OpenAI Build Week 2026, Apps for Your Life track.
+`v0.1.0` provides the wrapper-generated Next.js and TypeScript foundation,
+continuous integration, metadata, and baseline test tooling for OpenAI Build
+Week 2026, Apps for Your Life track.
+
+## Requirements
+
+- Node.js 24 (matching CI)
+- pnpm 10.33.2
+
+## Environment
+
+Copy the checked-in example and add local values as later features require:
+
+```bash
+cp .env.example .env.local
+```
+
+`NEXT_PUBLIC_SITE_URL` is safe for the browser. `OPENAI_API_KEY` is server-only
+and must never use a `NEXT_PUBLIC_` prefix.
+
+## Develop
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Verify
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+## Deploy
+
+Push to a Vercel-linked Git repository or run `vercel deploy`. The generated
+deployment configuration lives in [`vercel.ts`](./vercel.ts).
+
+Product-specific logic belongs in `src/logic/`; Next.js pages and route
+handlers belong in `app/`.
 
 ## License
 
