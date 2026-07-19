@@ -54,6 +54,28 @@ export {
   type RestoredPracticePlan,
 } from "./practice-plan-storage";
 export {
+  PRACTICE_LOG_STORAGE_VERSION,
+  persistPracticeLogs,
+  practiceLogStorageKey,
+  restorePracticeLogs,
+} from "./practice-log-storage";
+export {
+  CONFIDENCE_LEVELS,
+  SECTION_TRENDS,
+  NewPracticeLogSchema,
+  PracticeLogEntrySchema,
+  PracticeLogInputError,
+  computeSectionTrends,
+  createPracticeLogEntry,
+  type ConfidenceLevel,
+  type NewPracticeLog,
+  type PracticeLogContext,
+  type PracticeLogEntry,
+  type PracticeLogInputErrorCode,
+  type SectionTrend,
+  type SectionTrendDirection,
+} from "./section-mastery";
+export {
   NOTE_KINDS,
   SECTION_STATUSES,
   SONG_STATUSES,

@@ -1,15 +1,24 @@
 "use client";
 
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useMemo, useReducer, useState, type FormEvent } from "react";
 
 import {
   DEMO_SONG_MAP,
+  CONFIDENCE_LEVELS,
   INITIAL_PRACTICE_PLAN_STATE,
+  PracticeLogInputError,
   PracticePlanRequestError,
+  computeSectionTrends,
+  createPracticeLogEntry,
   persistPracticePlan,
+  persistPracticeLogs,
   reducePracticePlanWorkspace,
   requestCountdownPracticePlan,
   restorePracticePlan,
+  restorePracticeLogs,
+  type ConfidenceLevel,
+  type PracticeLogEntry,
+  type SectionTrendDirection,
 } from "@/src/logic";
 
 const DEFAULT_SESSIONS_PER_WEEK = 2;
@@ -23,6 +32,13 @@ function formatDate(date: string): string {
   }).format(new Date(`${date}T00:00:00.000Z`));
 }
 
+const TREND_LABELS: Record<SectionTrendDirection, string> = {
+  improving: "Improving",
+  flat: "Holding steady",
+  declining: "Needs attention",
+  insufficient_data: "More data needed",
+};
+
 export function CountdownWorkspace() {
   const [state, dispatch] = useReducer(
     reducePracticePlanWorkspace,
@@ -31,6 +47,26 @@ export function CountdownWorkspace() {
   const [sessionsPerWeek, setSessionsPerWeek] = useState(DEFAULT_SESSIONS_PER_WEEK);
   const [persistenceStatus, setPersistenceStatus] = useState<"saved" | "unavailable" | null>(
     null,
+  );
+  const [practiceLogs, setPracticeLogs] = useState<readonly PracticeLogEntry[]>([]);
+  const [activeLogSession, setActiveLogSession] = useState<number | null>(null);
+  const [selectedSectionId, setSelectedSectionId] = useState<string>(
+    DEMO_SONG_MAP.sections[0]!.id,
+  );
+  const [confidenceLevel, setConfidenceLevel] = useState<ConfidenceLevel>(3);
+  const [practiceNote, setPracticeNote] = useState("");
+  const [logFeedback, setLogFeedback] = useState<{
+    readonly kind: "saved" | "warning" | "error";
+    readonly message: string;
+  } | null>(null);
+
+  const sectionTrends = useMemo(
+    () =>
+      computeSectionTrends(
+        practiceLogs,
+        DEMO_SONG_MAP.sections.map((section) => section.id),
+      ),
+    [practiceLogs],
   );
 
   useEffect(() => {
@@ -42,10 +78,12 @@ export function CountdownWorkspace() {
       }
 
       const restored = restorePracticePlan(window.localStorage, DEMO_SONG_MAP);
+      const restoredLogs = restorePracticeLogs(window.localStorage, DEMO_SONG_MAP);
       if (restored) {
         setSessionsPerWeek(restored.sessionsPerWeek);
         setPersistenceStatus("saved");
       }
+      setPracticeLogs(restoredLogs);
       dispatch({ type: "restore", plan: restored?.plan ?? null });
     });
 
@@ -82,6 +120,55 @@ export function CountdownWorkspace() {
           error instanceof PracticePlanRequestError
             ? error.message
             : "Encore could not generate this plan. Please try again.",
+      });
+    }
+  }
+
+  function openLogForm(sessionNumber: number) {
+    setActiveLogSession(sessionNumber);
+    setLogFeedback(null);
+    setPracticeNote("");
+    setConfidenceLevel(3);
+  }
+
+  function submitPracticeLog(event: FormEvent<HTMLFormElement>, sessionNumber: number) {
+    event.preventDefault();
+
+    try {
+      const entry = createPracticeLogEntry(
+        {
+          sectionId: selectedSectionId,
+          sessionNumber,
+          confidenceLevel,
+          note: practiceNote,
+        },
+        {
+          songMap: DEMO_SONG_MAP,
+          totalSessions: state.phase === "success" ? state.plan.totalSessions : 0,
+          id: crypto.randomUUID(),
+          loggedAt: new Date().toISOString(),
+        },
+      );
+      const nextLogs = [...practiceLogs, entry];
+      const saved = persistPracticeLogs(window.localStorage, DEMO_SONG_MAP, nextLogs);
+
+      setPracticeLogs(nextLogs);
+      setActiveLogSession(null);
+      setPracticeNote("");
+      setConfidenceLevel(3);
+      setLogFeedback({
+        kind: saved ? "saved" : "warning",
+        message: saved
+          ? "Practice entry saved in this browser."
+          : "Entry added for this visit, but browser storage is unavailable.",
+      });
+    } catch (error) {
+      setLogFeedback({
+        kind: "error",
+        message:
+          error instanceof PracticeLogInputError
+            ? error.message
+            : "Encore could not save this practice entry. Please try again.",
       });
     }
   }
@@ -233,19 +320,159 @@ export function CountdownWorkspace() {
                   : "Plan available for this visit; browser storage is unavailable"}
               </p>
 
+              <section className="mastery-section" aria-labelledby="mastery-heading">
+                <div className="mastery-heading-row">
+                  <div>
+                    <p className="eyebrow">Section mastery</p>
+                    <h3 id="mastery-heading">Confidence, section by section.</h3>
+                  </div>
+                  <p>{practiceLogs.length} {practiceLogs.length === 1 ? "entry" : "entries"} logged</p>
+                </div>
+
+                <div className="trend-grid">
+                  {sectionTrends.map((trend) => {
+                    const section = DEMO_SONG_MAP.sections.find(
+                      (candidate) => candidate.id === trend.sectionId,
+                    )!;
+                    return (
+                      <article className={`trend-card trend-${trend.trend}`} key={trend.sectionId}>
+                        <div>
+                          <p>{section.name}</p>
+                          <strong>
+                            {trend.latestConfidence === null ? "—" : `${trend.latestConfidence}/5`}
+                          </strong>
+                        </div>
+                        <span>{TREND_LABELS[trend.trend]}</span>
+                        <small>
+                          {trend.entriesLogged} {trend.entriesLogged === 1 ? "entry" : "entries"}
+                        </small>
+                      </article>
+                    );
+                  })}
+                </div>
+
+                {practiceLogs.length === 0 && (
+                  <p className="mastery-empty">
+                    Log confidence after a session. Two entries unlock the first trend.
+                  </p>
+                )}
+                {logFeedback && logFeedback.kind !== "error" && (
+                  <p
+                    className={`log-feedback ${logFeedback.kind}`}
+                    role="status"
+                  >
+                    {logFeedback.message}
+                  </p>
+                )}
+              </section>
+
               <ol className="session-list">
-                {state.plan.sessions.map((session) => (
-                  <li className="session-card" key={session.sessionNumber}>
-                    <span className="session-index">
-                      {String(session.sessionNumber).padStart(2, "0")}
-                    </span>
-                    <div>
-                      <p className="session-label">Session {session.sessionNumber}</p>
-                      <h3>{session.focus}</h3>
-                      <p>{session.technique}</p>
-                    </div>
-                  </li>
-                ))}
+                {state.plan.sessions.map((session) => {
+                  const sessionLogs = practiceLogs.filter(
+                    (entry) => entry.sessionNumber === session.sessionNumber,
+                  );
+                  return (
+                    <li className="session-card" key={session.sessionNumber}>
+                      <span className="session-index">
+                        {String(session.sessionNumber).padStart(2, "0")}
+                      </span>
+                      <div className="session-body">
+                        <p className="session-label">Session {session.sessionNumber}</p>
+                        <h3>{session.focus}</h3>
+                        <p>{session.technique}</p>
+
+                        {sessionLogs.length > 0 && (
+                          <ul className="logged-entry-list" aria-label={`Session ${session.sessionNumber} practice entries`}>
+                            {sessionLogs.map((entry) => {
+                              const section = DEMO_SONG_MAP.sections.find(
+                                (candidate) => candidate.id === entry.sectionId,
+                              )!;
+                              return (
+                                <li key={entry.id}>
+                                  <strong>{section.name} · {entry.confidenceLevel}/5</strong>
+                                  {entry.note && <span>{entry.note}</span>}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+
+                        {activeLogSession === session.sessionNumber ? (
+                          <form
+                            className="practice-log-form"
+                            onSubmit={(event) => submitPracticeLog(event, session.sessionNumber)}
+                          >
+                            <div className="log-form-heading">
+                              <strong>Log this practice</strong>
+                              <button type="button" onClick={() => setActiveLogSession(null)}>
+                                Cancel
+                              </button>
+                            </div>
+
+                            <label>
+                              <span>Section practiced</span>
+                              <select
+                                value={selectedSectionId}
+                                onChange={(event) => setSelectedSectionId(event.target.value)}
+                              >
+                                {DEMO_SONG_MAP.sections.map((section) => (
+                                  <option key={section.id} value={section.id}>{section.name}</option>
+                                ))}
+                              </select>
+                            </label>
+
+                            <fieldset>
+                              <legend>Confidence after practice</legend>
+                              <div className="confidence-options">
+                                {CONFIDENCE_LEVELS.map((level) => (
+                                  <label key={level}>
+                                    <input
+                                      type="radio"
+                                      name={`confidence-${session.sessionNumber}`}
+                                      value={level}
+                                      checked={confidenceLevel === level}
+                                      onChange={() => setConfidenceLevel(level)}
+                                    />
+                                    <span>{level}</span>
+                                  </label>
+                                ))}
+                              </div>
+                              <small>1 = uncertain · 5 = ready</small>
+                            </fieldset>
+
+                            <label>
+                              <span>Structural note <small>optional</small></span>
+                              <textarea
+                                value={practiceNote}
+                                maxLength={280}
+                                rows={3}
+                                placeholder="e.g. Transition stayed steady at a slower tempo."
+                                onChange={(event) => setPracticeNote(event.target.value)}
+                              />
+                            </label>
+                            {logFeedback?.kind === "error" && (
+                              <p className="log-feedback error" role="alert">
+                                {logFeedback.message}
+                              </p>
+                            )}
+                            <div className="log-form-footer">
+                              <small>{practiceNote.length}/280 · No lyrics</small>
+                              <button type="submit">Save practice entry</button>
+                            </div>
+                          </form>
+                        ) : (
+                          <button
+                            className="log-practice-button"
+                            type="button"
+                            onClick={() => openLogForm(session.sessionNumber)}
+                          >
+                            <span aria-hidden="true">＋</span> Log practice
+                          </button>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
               </ol>
 
               <footer className="safety-line">
