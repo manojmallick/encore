@@ -22,20 +22,32 @@ product and delivery specification.
 
 ## Current release
 
-`v0.4.0` adds deterministic lyric-risk checks for artist-authored notes on top
-of the typed Song Map domain. Continuous integration, metadata, and baseline
-test tooling support the OpenAI Build Week 2026 Apps for Your Life submission.
+`v0.5.0` adds server-side GPT-5.6 countdown-plan generation through the
+Responses API, with strict structured output and lyric-risk enforcement.
+Continuous integration, metadata, and baseline test tooling support the OpenAI
+Build Week 2026 Apps for Your Life submission.
 
 ## Lyric-risk policy
 
 Encore accepts structural practice notes, not song lyrics or sheet music. A
 defense-in-depth heuristic flags long quoted passages, stanza-like multiline
-text, and repeated substantive lines before future model requests. Blocked
+text, and repeated substantive lines before model requests. Blocked
 results include rewrite guidance that helps an artist describe the transition,
 register, rhythm, dynamics, or other practice challenge in their own words.
 
 Passing this check is a risk-reduction signal, not proof of copyright status,
 non-infringement, or legal compliance. The check cannot provide legal advice.
+
+## Practice-plan API
+
+`POST /api/practice-plan` accepts a complete typed Song Map plus an integer
+`sessionsPerWeek` from 1 through 7. The server validates the request, blocks
+lyric-like notes, calculates a maximum of 24 sessions, and asks `gpt-5.6` for a
+strictly structured countdown plan. The model call uses the Responses API with
+explicit low reasoning and never requests lyrics, tablature, or sheet music.
+
+Set the server-only `OPENAI_API_KEY` value in `.env.local` before calling the
+live route. Tests inject a model double and never make billable API requests.
 
 ## Requirements
 

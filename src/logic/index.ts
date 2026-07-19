@@ -14,6 +14,28 @@ export {
   type SongMapLyricRiskCheck,
 } from "./lyric-risk";
 export {
+  MAX_PRACTICE_SESSIONS,
+  PRACTICE_PLAN_MODEL,
+  PracticePlanConfigurationError,
+  PracticePlanInputError,
+  PracticePlanModelError,
+  PracticePlanModelOutputSchema,
+  PracticePlanOutputError,
+  PracticePlanRequestSchema,
+  PracticeSessionSchema,
+  buildPracticePlanPrompts,
+  calculateCountdownFacts,
+  generateCountdownPracticePlan,
+  type CountdownFacts,
+  type GeneratedPracticePlan,
+  type PracticePlanInputErrorCode,
+  type PracticePlanModelGenerator,
+  type PracticePlanModelOutput,
+  type PracticePlanModelRequest,
+  type PracticePlanRequest,
+  type PracticeSession,
+} from "./practice-plan";
+export {
   NOTE_KINDS,
   SECTION_STATUSES,
   SONG_STATUSES,
