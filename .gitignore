@@ -8,3 +8,4 @@ node_modules
 .context
 gain-report.json
 benchmarks/reports
+output/playwright
