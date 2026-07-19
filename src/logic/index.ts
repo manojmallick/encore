@@ -60,6 +60,26 @@ export {
   restorePracticeLogs,
 } from "./practice-log-storage";
 export {
+  CREATOR_RECOMMENDATIONS,
+  createCreatorDashboard,
+  type CreatorDashboardInput,
+  type CreatorDashboardRecommendation,
+  type CreatorDashboardSnapshot,
+  type CreatorRecommendation,
+  type DashboardWeakSection,
+} from "./creator-dashboard";
+export {
+  RECORDING_DECISIONS,
+  RECORDING_DECISION_STORAGE_VERSION,
+  RecordingDecisionSchema,
+  createRecordingDecision,
+  persistRecordingDecision,
+  recordingDecisionStorageKey,
+  restoreRecordingDecision,
+  type RecordingDecision,
+  type RecordingDecisionKind,
+} from "./recording-decision";
+export {
   RECORDING_READINESS_STATUSES,
   RecordingReadinessInputSchema,
   calculateCalendarDaysRemaining,
