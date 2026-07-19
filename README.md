@@ -22,10 +22,11 @@ product and delivery specification.
 
 ## Current release
 
-`v0.11.0` completes the record-to-publish golden path. After generating a
-Making Of caption, an artist can confirm that they posted the cover externally,
-persist the published milestone, and see Map -> Plan -> Practice -> Record ->
-Publish completed end to end.
+`v0.12.0` protects the record-to-publish golden path with a deterministic
+cross-domain regression suite and a real Chromium browser test. The tests cover
+Map -> Plan -> Practice -> Record -> Publish, reload restoration, reversible
+reopening, lyric-risk blocks, malformed model output, mismatched history, and
+corrupted or orphaned browser state without making live OpenAI requests.
 Continuous integration, metadata, and baseline test tooling support the OpenAI
 Build Week 2026 Apps for Your Life submission.
 
@@ -163,8 +164,14 @@ Open [http://localhost:3000](http://localhost:3000).
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm test:e2e
 pnpm build
 ```
+
+The recorded `v0.12.0` baseline is **112 passing unit/integration tests across
+19 files plus 1 passing Chromium golden-path test**. CI installs Chromium and
+runs both suites; API and model behavior is replaced with deterministic test
+doubles, so verification never requires an OpenAI API key.
 
 ## Deploy
 
