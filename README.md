@@ -1,233 +1,266 @@
 # Encore
 
-Encore helps independent cover artists move one specific song from
-"I want to perform this" to "published."
+**A one-song countdown studio that turns structural practice notes into a focused plan, an explainable recording decision, and a Making Of caption.**
 
-Instead of teaching a generic music curriculum, Encore organizes the artist's
-own notes about difficult song sections into a dated practice plan, tracks
-section-level progress, gives a transparent recording-readiness signal, and
-turns the completed practice history into a Making Of caption.
+[![License: MIT](https://img.shields.io/badge/license-MIT-2563eb.svg)](./LICENSE)
+[![Language: TypeScript](https://img.shields.io/badge/language-TypeScript-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-000000.svg?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![OpenAI Responses API](https://img.shields.io/badge/OpenAI-Responses_API-412991.svg?logo=openai&logoColor=white)](https://platform.openai.com/docs/api-reference/responses)
+[![OpenAI Build Week 2026](https://img.shields.io/badge/context-OpenAI_Build_Week_2026-0f766e.svg)](./ENCORE_APPS_FOR_LIFE_PLAN.md)
 
-## Build Week scope
+Independent cover artists often manage one recording deadline across scattered notes, calendars, and memory. Encore connects that work into one path: a GPT-5.6 countdown plan, section-level practice logs, deterministic readiness, and a lyric-risk-checked caption. It was built by [Manoj Mallick](https://github.com/manojmallick) for OpenAI Build Week, with the implementation history, automated checks, and production smoke workflow kept in the public repository.
 
-The submission's golden path is:
+[Open the production demo](https://encore-sigma-ten.vercel.app) · [Read the Build Week submission](./docs/BUILD_WEEK_SUBMISSION.md)
 
-> Map one song -> plan the hard parts -> practice -> assess readiness ->
-> record -> publish.
+## Table of Contents
 
-Version `v0.0.1` defines the target user, must-ship scope, exclusions, release
-gates, and ordered commit roadmap. See the
-[Apps for Your Life plan](./ENCORE_APPS_FOR_LIFE_PLAN.md) for the complete
-product and delivery specification.
+- [Why Encore](#why-encore)
+- [Honest Status](#honest-status)
+- [Architecture](#architecture)
+- [How it works](#how-it-works)
+- [Quick Start](#quick-start)
+- [Configuration](#configuration)
+- [Project Structure](#project-structure)
+- [Privacy and data handling](#privacy-and-data-handling)
+- [Roadmap](#roadmap)
+- [License](#license)
 
-## Current release
+## Why Encore
 
-`v0.16.0` makes production deployment testable. Vercel now uses a frozen pnpm
-install, the Next.js preset, the repository build command, immutable framework
-asset caching, and baseline security headers. A separate Playwright smoke
-runner requires an explicit HTTPS deployment, verifies the production shell
-and headers, and reuses the complete clean-browser golden path without starting
-localhost. The production URL is verified; live GPT-5.6 requests, video, and
-Codex-session artifacts remain explicitly marked for capture until their real
-evidence exists.
+Encore is designed for the gap between choosing a cover song and publishing the finished performance.
 
-## Submission documentation
+| The artist's problem | Encore's implemented response |
+|---|---|
+| Practice notes are disconnected from the recording date | GPT-5.6 returns a validated, session-by-session countdown plan |
+| Progress feels subjective | Confidence is logged per section on a 1–5 scale and reduced to explicit trends |
+| A single average can hide missing or declining sections | Readiness withholds incomplete scores and exposes every threshold and penalty |
+| Free-text notes can accidentally become lyric storage | A transparent heuristic blocks long quotations, stanza-shaped text, and repeated substantive lines |
+| The story behind the recording is lost | GPT-5.6 drafts a short caption from validated practice history after the song is marked recorded |
+| “Published” is easy to overstate | Encore records an artist-confirmed local milestone; it does not post to an external platform |
 
-- [Reproduce Encore](./docs/REPRODUCIBILITY.md) from a clean clone, with or
-  without an OpenAI API key.
-- Review the [architecture and trust boundaries](./docs/ARCHITECTURE.md).
-- Follow the repository-backed [Build Week challenge diary](./docs/CHALLENGE_DIARY.md).
-- Use the [submission copy, demo runbook, and evidence ledger](./docs/BUILD_WEEK_SUBMISSION.md).
+## Honest Status
 
-## Lyric-risk policy
+Encore is a deployed Build Week prototype with a complete demonstration path, not a general-purpose music platform.
 
-Encore accepts structural practice notes, not song lyrics or sheet music. A
-defense-in-depth heuristic flags long quoted passages, stanza-like multiline
-text, and repeated substantive lines before model requests. Blocked
-results include rewrite guidance that helps an artist describe the transition,
-register, rhythm, dynamics, or other practice challenge in their own words.
+| Area | Current reality |
+|---|---|
+| Song input | The UI uses one checked-in, read-only Song Map for “Dreams” by Fleetwood Mac. There is no Song Map editor or multi-song library. |
+| Target date | The fixture target is `2026-08-15`. Live plan generation rejects it after that date because past targets fail closed. |
+| AI features | The two server routes call GPT-5.6 only when `OPENAI_API_KEY` is configured. Automated browser tests intercept those routes with deterministic responses. |
+| Persistence | Plans, practice logs, recording decisions, and publication milestones use versioned `localStorage` keys. There is no account, database, or cross-device sync. |
+| Readiness | The score is deterministic application logic, not an AI prediction or an assessment of vocal or instrumental audio. |
+| Publishing | The artist posts externally, then confirms the milestone in Encore. No publishing-service integration exists. |
+| Lyric safety | The Lyric Firewall is a risk-reduction heuristic. It is not a copyright determination or legal advice. |
+| Measurement | No performance benchmark is claimed. Run the commands in [Quick Start](#verify-the-build) to measure the current test and build results on your machine. |
 
-Passing this check is a risk-reduction signal, not proof of copyright status,
-non-infringement, or legal compliance. The check cannot provide legal advice.
+## Architecture
 
-## Practice-plan API
+```mermaid
+flowchart TD
+  subgraph Browser["🖥️ Browser layer"]
+    SongMap["Preloaded Song Map"]
+    Frequency["Sessions per week · default 2"]
+    Log["Section log · confidence 1–5"]
+    Error["Validation feedback"]
+    ArtistChoice{"Artist recording choice"}
+    LocalStore[("Versioned localStorage")]
+    ExternalPost["External post by the artist"]
+  end
 
-`POST /api/practice-plan` accepts a complete typed Song Map plus an integer
-`sessionsPerWeek` from 1 through 7. The server validates the request, blocks
-lyric-like notes, calculates a maximum of 24 sessions, and asks `gpt-5.6` for a
-strictly structured countdown plan. The model call uses the Responses API with
-explicit low reasoning and never requests lyrics, tablature, or sheet music.
+  subgraph Domain["⚙️ Deterministic domain layer"]
+    InputSchema["Zod input and relationship validation"]
+    Firewall{"Lyric Firewall passes?"}
+    Blocked["Actionable validation error"]
+    Trends["Recent section trends"]
+    Readiness["Transparent readiness calculation"]
+    OutputSchema["Zod structured-output validation"]
+  end
 
-Set the server-only `OPENAI_API_KEY` value in `.env.local` before calling the
-live route. Tests inject a model double and never make billable API requests.
+  subgraph Server["🔒 Next.js server layer"]
+    PlanAPI["POST /api/practice-plan"]
+    CaptionAPI["POST /api/making-of-caption"]
+    OpenAI["OpenAI Responses API · GPT-5.6"]
+  end
 
-The home page calls this route for the lyric-safe demo Song Map and validates
-the response again before display or persistence. The latest valid plan is
-stored under a versioned, Song Map-specific key in browser-local storage.
-Malformed plans, changed target dates, and unavailable storage are handled
-without preventing a fresh generation attempt. Cross-device persistence remains
-outside the Build Week golden-path scope.
+  subgraph Outputs["🎯 Artist-facing outputs"]
+    Plan["Countdown practice plan"]
+    Dashboard["Trends, weak sections, readiness"]
+    Caption["Making Of caption"]
+    Published["Local published milestone"]
+  end
 
-Date-only targets use UTC calendar days consistently in the plan API and
-browser readiness calculation. Equivalent timezone-offset instants therefore
-produce the same countdown, while impossible dates and invalid clocks fail
-closed. A target on the current UTC day is too late for a new plan; readiness
-clamps current or past targets to zero remaining days.
-
-Both generation APIs reject malformed JSON, unknown fields, empty required
-data, and invalid confidence or frequency values before model invocation.
-Relationship and lyric-risk failures remain actionable, while configuration,
-provider, refusal, and malformed-output details are sanitized before reaching
-the browser.
-
-## Practice logs and mastery trends
-
-Valid practice entries are stored in a separate versioned browser-local key for
-the active Song Map. Entries link a mapped section to a countdown session,
-timestamp, confidence level, and optional structural note. Malformed entries,
-unknown sections, and lyric-like notes are rejected before persistence.
-
-Trends are deterministic: fewer than two section entries yields
-`insufficient_data`; otherwise Encore orders entries chronologically, takes the
-most recent three, and compares the first confidence level with the last. A
-positive delta is `improving`, zero is `flat`, and a negative delta is
-`declining`. These outputs form the input for the later recording-readiness
-release.
-
-## Recording readiness
-
-Readiness is recalculated from the current countdown and practice logs; it is
-never separately persisted. Encore withholds the numeric score until every
-mapped section has at least one confidence rating. This prevents missing
-sections from silently appearing as zero confidence or, worse, being ignored.
-
-With complete coverage, the score starts with average confidence as a
-percentage and subtracts eight points for every declining section. `behind`
-takes precedence when confidence is more than 1.2 points below the level
-expected from elapsed plan time or when at least two sections decline. `ready`
-requires at least 4/5 average confidence, no declining sections, and no more
-than two days remaining. Every result displays the coverage, average, elapsed
-time, expected confidence, gap, decline count, and threshold reasons used.
-
-## Creator dashboard and recording decision
-
-The dashboard is derived from the current plan, logs, trends, and readiness
-result. It shows the next unlogged session and ranks up to three weak sections
-with unrated sections first, then declining sections, then lower confidence;
-Song Map order breaks ties. Readiness maps to one explained recommendation:
-gather data, adjust the plan, keep practicing, or record.
-
-Recording remains the artist's decision. Marking a not-ready song recorded
-requires an explicit acknowledgement, but Encore never blocks that choice. The
-latest validated decision is stored in a separate versioned browser-local key.
-A recorded decision freezes plan generation and practice logging while keeping
-all history available for the Making Of caption; returning to practice is
-reversible until the artist confirms the publish milestone.
-
-## Making Of captions
-
-Recorded songs unlock a caption workspace backed by the OpenAI Responses API
-and strict structured output. The request uses GPT-5.6 with explicit low
-reasoning effort and low text verbosity. Encore derives the prompt from the
-artist's Song Map, section confidence history, trends, and optional structural
-practice observations.
-
-Every Song Map note and practice observation is lyric-risk checked before the
-request. The returned caption is schema-validated and checked again before it
-reaches the browser. Successful captions display the same lyric-risk
-confirmation as practice plans and can be copied or regenerated. This is a
-defense-in-depth product safeguard, not a copyright determination or legal
-advice.
-
-## Record-to-publish lifecycle
-
-Encore never claims to publish to an external service. After the artist posts
-the recorded cover and caption themselves, an explicit confirmation creates a
-validated local publication record containing the Song Map ID, publish time,
-and exact caption snapshot. A matching recorded decision and valid generated
-caption are required.
-
-The versioned publication record restores after reload only while its recorded
-decision remains valid. Published state keeps practice controls frozen, shows
-the completed five-step golden path, and keeps the final caption copyable. An
-artist can reopen the recorded step without deleting the plan, practice logs,
-recording decision, or current caption. Cross-platform publishing integrations
-remain intentionally outside the Build Week scope.
-
-## Requirements
-
-- Node.js 24 (matching CI)
-- pnpm 10.33.2
-
-## Environment
-
-Copy the checked-in example and add local values as later features require:
-
-```bash
-cp .env.example .env.local
+  SongMap --> InputSchema
+  Frequency --> InputSchema
+  InputSchema --> PlanAPI
+  PlanAPI --> Firewall
+  Firewall -- "blocked" --> Blocked
+  Blocked --> Error
+  Firewall -- "passed" --> OpenAI
+  OpenAI --> OutputSchema
+  OutputSchema --> Plan
+  Plan --> LocalStore
+  Plan --> Log
+  Log --> LocalStore
+  Log --> Trends
+  Trends --> Readiness
+  Readiness --> Dashboard
+  Dashboard --> ArtistChoice
+  ArtistChoice --> LocalStore
+  ArtistChoice -- "keep practicing" --> Log
+  ArtistChoice -- "recorded; acknowledge if not ready" --> CaptionAPI
+  SongMap --> CaptionAPI
+  Log --> CaptionAPI
+  CaptionAPI --> Firewall
+  Firewall -- "passed" --> OpenAI
+  OpenAI --> OutputSchema
+  OutputSchema --> Caption
+  Caption --> ExternalPost
+  ExternalPost --> Published
+  Published --> LocalStore
 ```
 
-`NEXT_PUBLIC_SITE_URL` is safe for the browser. `OPENAI_API_KEY` is server-only
-and must never use a `NEXT_PUBLIC_` prefix.
+The model boundary is intentionally narrow. API routes validate unknown JSON, apply lyric-risk checks before outbound requests, request Zod-backed structured output, validate the response again, and return sanitized errors to the browser.
 
-## Develop
+## How it works
+
+1. **Load the demo Song Map.** The client renders the checked-in song metadata, five ordered sections, structural difficulty notes, and target date.
+2. **Generate a countdown.** Choose 1–7 sessions per week. The plan route validates the request, rejects lyric-risky notes, calculates UTC calendar days, caps the plan at 24 sessions, and asks GPT-5.6 for contiguous structured sessions.
+3. **Log practice.** Each entry records one known section, one plan session, confidence from 1–5, and an optional lyric-checked note of up to 280 characters.
+4. **Calculate trends.** Fewer than two entries for a section yields `insufficient_data`. Otherwise, Encore compares the first and last confidence values among the three most recent entries to produce `improving`, `flat`, or `declining`.
+5. **Calculate readiness.** No score is shown until every section has a confidence rating. The score starts from average confidence as a percentage and subtracts 8 points per declining section. Every factor and threshold is displayed.
+6. **Make the recording call.** Encore recommends gathering data, adjusting the plan, continuing practice, or recording. The artist can record before `ready`, but must acknowledge the override.
+7. **Generate the Making Of caption.** After recording and at least one valid practice entry, the caption route sends validated history to GPT-5.6. The returned caption must be 40–500 characters and pass the Lyric Firewall again.
+8. **Confirm publication.** The artist copies and posts the caption outside Encore, then explicitly records the local publish milestone. The action is reversible without deleting practice history.
+
+## Quick Start
+
+### Prerequisites
+
+- Git
+- Node.js 24.x
+- pnpm 10.33.2
+- An OpenAI API key only for live plan and caption generation
+
+### Run locally
 
 ```bash
-pnpm install
+git clone https://github.com/manojmallick/encore.git
+cd encore
+pnpm install --frozen-lockfile
+cp .env.example .env.local
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open <http://localhost:3000>.
 
-## Verify
+The shell and saved browser workflow load without an API key. To call the live GPT-5.6 routes, edit `.env.local` and restart the development server:
+
+```dotenv
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+OPENAI_API_KEY=replace-with-your-server-only-key
+```
+
+Never expose the key through a `NEXT_PUBLIC_*` variable or commit `.env.local`.
+
+### Verify the build
 
 ```bash
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm exec playwright install chromium
 pnpm test:e2e
 pnpm build
 ```
 
-The recorded `v0.16.0` baseline is **137 passing unit/integration tests across
-22 files plus 1 passing local Chromium golden-path test**. The browser test performs
-WCAG 2.0, 2.1, and 2.2 A/AA axe scans in empty and published states, verifies
-keyboard focus transitions, and checks responsive overflow at 320, 390, 768,
-and 1440 pixels. CI installs Chromium and runs both suites; API and model
-behavior is replaced with deterministic test doubles, so verification never
-requires an OpenAI API key.
-
-The two release-gate suites contain **11 recording-readiness tests** and **12
-Lyric Firewall tests** after parameterized cases are expanded. Run the exact
-commands and see the counting method in the
-[reproducibility guide](./docs/REPRODUCIBILITY.md#verified-test-baseline).
-
-## Deploy and smoke test
-
-Production: <https://encore-sigma-ten.vercel.app>
-
-Push to a Vercel-linked Git repository or run `vercel deploy`. The versioned
-configuration in [`vercel.ts`](./vercel.ts) pins the production install/build
-contract and response headers. In Vercel, set `NEXT_PUBLIC_SITE_URL` to the final
-HTTPS production origin and set the server-only `OPENAI_API_KEY` for the two live
-generation features.
-
-After the deployment is ready, run the clean-browser smoke test against its
-origin—never a path or localhost URL:
+`pnpm test:e2e` starts the local Next.js development server on `127.0.0.1:3100` and uses deterministic API responses. The production smoke suite requires an explicit HTTPS origin and does not start localhost:
 
 ```bash
 ENCORE_SMOKE_BASE_URL=https://encore-sigma-ten.vercel.app pnpm test:smoke
 ```
 
-For a protected deployment, set `VERCEL_AUTOMATION_BYPASS_SECRET` in the shell
-or as a GitHub Actions secret. Do not put it in the command, URL, or repository.
-The manual `production-smoke` workflow accepts the production URL as an input.
-See the [reproducibility guide](./docs/REPRODUCIBILITY.md#production-deployment-smoke-test)
-for the release procedure and evidence rules.
+See [docs/REPRODUCIBILITY.md](./docs/REPRODUCIBILITY.md) for clean-room setup, current measured test counts, and Vercel instructions.
 
-Product-specific logic belongs in `src/logic/`; Next.js pages and route
-handlers belong in `app/`.
+## Configuration
+
+| Variable or constant | Default | Purpose |
+|---|---|---|
+| `NEXT_PUBLIC_SITE_URL` | Runtime fallback: `https://example.com`; `.env.example`: `http://localhost:3000` | Canonical metadata origin. Set it to the final HTTPS origin in production. |
+| `OPENAI_API_KEY` | None | Server-only credential for both GPT-5.6 routes. |
+| `ENCORE_SMOKE_BASE_URL` | None | Required HTTPS origin for `pnpm test:smoke`; localhost, paths, queries, and fragments are rejected. |
+| `VERCEL_AUTOMATION_BYPASS_SECRET` | None | Optional test-only header value for protected Vercel deployments. |
+| `PRACTICE_PLAN_MODEL` / `MAKING_OF_CAPTION_MODEL` | `gpt-5.6` | Model used by the plan and caption adapters. |
+| Plan/caption reasoning effort | `low` | Responses API reasoning setting for both model calls. |
+| Caption text verbosity | `low` | Responses API text verbosity for caption generation. |
+| `DEFAULT_SESSIONS_PER_WEEK` | `2` | Initial selection in the countdown UI. Valid request range is 1–7. |
+| `MAX_PRACTICE_SESSIONS` | `24` | Maximum calculated or generated countdown length. |
+| Song Map sections | 1–12 | Schema-enforced section count. Each section name is at most 80 characters and its structural note at most 500. |
+| Practice confidence | 1–5 | Integer confidence recorded for one mapped section and plan session. |
+| Practice note | Empty; maximum 280 characters | Optional structural observation checked for lyric risk before storage or model use. |
+| Caption | 40–500 characters | Structured GPT output range before the returned caption is lyric-checked. |
+| Recent trend window | Latest 3 entries | Window used after a section has at least two entries. |
+| Readiness penalties | 8 points per declining section | Applied after average confidence is converted to a percentage. |
+| Behind thresholds | Confidence gap greater than 1.2, or at least 2 declining sections | Either condition produces `behind`. |
+| Ready thresholds | Average confidence at least 4/5, 0 declining sections, and at most 2 days remaining | All conditions are required for `ready`. |
+| Browser storage versions | `1` | Separate versioned records for plans, logs, recording decisions, and publication milestones. |
+| Maximum saved practice logs | `500` | Schema limit for one Song Map's local practice-log record. |
+
+## Project Structure
+
+```text
+encore/
+├── app/
+│   ├── page.tsx                         # Next.js entry point
+│   ├── countdown-workspace.tsx          # Client orchestration and local persistence
+│   ├── creator-dashboard.tsx            # Recommendation and recording decision UI
+│   ├── making-of-caption.tsx            # Caption, copy, and publish-confirmation UI
+│   └── api/
+│       ├── practice-plan/route.ts       # Validated countdown API boundary
+│       └── making-of-caption/route.ts   # Validated caption API boundary
+├── src/
+│   ├── logic/
+│   │   ├── fixtures/demo-song-map.ts    # The read-only demonstration song
+│   │   ├── practice-plan.ts             # Plan schemas, calendar facts, prompts, validation
+│   │   ├── lyric-risk.ts                # Explainable text-risk heuristic
+│   │   ├── section-mastery.ts           # Practice-entry validation and trends
+│   │   ├── recording-readiness.ts       # Deterministic readiness calculation
+│   │   ├── creator-dashboard.ts         # Weak-section ranking and recommendation
+│   │   └── *-storage.ts                 # Versioned localStorage adapters
+│   └── server/
+│       ├── openai-practice-plan.ts      # Responses API plan adapter
+│       └── openai-making-of-caption.ts  # Responses API caption adapter
+├── tests/
+│   ├── e2e/golden-path-flow.ts          # Reusable deterministic browser flow
+│   └── smoke/production.spec.ts         # HTTPS deployment contract
+├── docs/                                # Architecture, reproduction, diary, submission
+├── playwright.config.ts                 # Local Chromium configuration
+├── playwright.smoke.config.ts           # Existing-deployment smoke configuration
+├── vercel.ts                            # Install, build, cache, and security headers
+└── package.json                         # Pinned package manager and task scripts
+```
+
+## Privacy and data handling
+
+- Song metadata, structural notes, practice history, and decisions remain in the current browser's `localStorage` unless a live AI feature is requested.
+- Live plan requests send song metadata and structural notes to the OpenAI Responses API. For captions, the browser sends the Song Map, practice logs, and recording decision to Encore's server; the model prompt contains song metadata and derived practice history after the decision is validated.
+- `OPENAI_API_KEY` is read only by server modules. It is never required by browser code.
+- Encore does not collect audio, retrieve lyrics, create accounts, or write to a project database.
+- Browser storage is origin-scoped but not an encrypted vault. Anyone with access to the same browser profile may be able to inspect it.
+- Malformed or mismatched persisted records are ignored and removed when storage access permits.
+- The Lyric Firewall reduces the chance of sending lyric-like text. It cannot determine copyright status or provide legal advice.
+
+## Roadmap
+
+Only the v1.0 submission freeze is currently tracked. The other items below come from the project's documented post-prototype exclusions and have no promised date.
+
+| Item | Status | Evidence or boundary |
+|---|---|---|
+| Freeze the Build Week v1.0 submission | Tracked in [issue #33](https://github.com/manojmallick/encore/issues/33) | Waiting on live GPT evidence, demo video, Devpost confirmation, and Codex session evidence |
+| Editable and multiple Song Maps | Candidate | The current UI imports one fixed fixture |
+| Accounts and cross-device persistence | Candidate | Current persistence is browser-local only |
+| Audio recording, pitch analysis, or transcription | Research only | Explicitly excluded from the Build Week release |
+| Direct publishing integrations | Candidate | Current publishing is an artist-confirmed local milestone |
 
 ## License
 
-[MIT](./LICENSE)
+Encore is available under the [MIT License](./LICENSE). Copyright © 2026 Manoj Mallick.
