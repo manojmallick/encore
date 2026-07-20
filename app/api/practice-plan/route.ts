@@ -10,11 +10,15 @@ import {
   generateCountdownPracticePlan,
   type PracticePlanModelGenerator,
 } from "../../../src/logic";
-import { generatePracticePlanWithOpenAI } from "../../../src/server/openai-practice-plan";
+import {
+  practicePlanRuntime,
+  type GenerationSource,
+} from "../../../src/server/model-runtime";
 
 export interface PracticePlanRouteDependencies {
   readonly generateModelOutput: PracticePlanModelGenerator;
   readonly now: () => Date;
+  readonly generationSource?: GenerationSource;
 }
 
 function errorResponse(status: number, code: string, message: string, details?: unknown) {
@@ -40,7 +44,13 @@ export function createPracticePlanPost(dependencies: PracticePlanRouteDependenci
         dependencies.generateModelOutput,
         dependencies.now(),
       );
-      return Response.json(plan, { status: 200 });
+      return Response.json(
+        {
+          ...plan,
+          generationSource: dependencies.generationSource ?? "openai",
+        },
+        { status: 200 },
+      );
     } catch (error) {
       if (error instanceof SyntaxError || error instanceof z.ZodError) {
         return errorResponse(
@@ -79,7 +89,9 @@ export function createPracticePlanPost(dependencies: PracticePlanRouteDependenci
   };
 }
 
-export const POST = createPracticePlanPost({
-  generateModelOutput: generatePracticePlanWithOpenAI,
-  now: () => new Date(),
-});
+export async function POST(request: Request): Promise<Response> {
+  return createPracticePlanPost({
+    ...practicePlanRuntime(),
+    now: () => new Date(),
+  })(request);
+}

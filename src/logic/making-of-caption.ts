@@ -33,6 +33,7 @@ export const MakingOfCaptionModelOutputSchema = z
 export const GeneratedMakingOfCaptionSchema = z
   .object({
     model: z.literal(MAKING_OF_CAPTION_MODEL),
+    generationSource: z.enum(["openai", "demo_fixture"]).optional(),
     caption: z.string().trim().min(40).max(500),
     practiceSessions: z.number().int().positive(),
     practiceEntries: z.number().int().positive(),
