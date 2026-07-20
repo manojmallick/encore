@@ -38,6 +38,8 @@ boundaries: structured countdown planning and structured Making Of caption
 generation. Both use low reasoning effort and Zod-backed structured outputs;
 the caption request also uses low text verbosity. A reusable Lyric Firewall
 runs before outbound prompts, and caption output is checked again on return.
+When no API key is configured, the same routes return visibly labeled,
+deterministic fixtures that follow the production response schemas.
 
 Codex carried the ordered product plan through scoped GitHub issues, isolated
 branches, tests, commits, and reviewed pull requests. The public sequence from
@@ -57,7 +59,7 @@ in the evidence ledger until captured from the product UI.
 - Transparent readiness that can say “insufficient data,” “behind,” “on
   track,” or “ready,” while preserving artist agency.
 - Defense-in-depth lyric-risk checks with actionable rewrite guidance.
-- 126 unit/integration tests and one accessible, responsive Chromium golden
+- 140 unit/integration tests and one accessible, responsive Chromium golden
   path that run without an OpenAI key.
 
 ### Challenges and learning
@@ -112,7 +114,7 @@ Status meanings: **verified** is reproducible from the public repository;
 | Relevant license | verified | [MIT license](../LICENSE) |
 | Ordered implementation history | verified | [issues](https://github.com/manojmallick/encore/issues?q=is%3Aissue) and [merged PRs](https://github.com/manojmallick/encore/pulls?q=is%3Apr+is%3Amerged) |
 | Reproducible setup and architecture | verified | [reproducibility](./REPRODUCIBILITY.md) and [architecture](./ARCHITECTURE.md) |
-| Unit/integration baseline | verified | 126 tests across 20 files; rerun `pnpm test` |
+| Unit/integration baseline | verified | 140 tests across 23 files; rerun `pnpm test` |
 | Recording-readiness count | verified | 11 expanded tests; run the JSON-reporter command in the reproducibility guide |
 | Lyric Firewall count | verified | 12 expanded tests; run the JSON-reporter command in the reproducibility guide |
 | Chromium golden path | verified | 1 test; rerun `pnpm test:e2e` |
