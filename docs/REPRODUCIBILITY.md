@@ -84,11 +84,11 @@ server with `Ctrl+C`.
 
 ## Verified test baseline
 
-The `v0.16.0` release gate records these real Vitest and Playwright results:
+The `v1.0.0` release gate records these real Vitest and Playwright results:
 
 | Scope | Command | Expected result |
 |---|---|---:|
-| Unit and integration | `pnpm test` | 137 tests in 22 files |
+| Unit and integration | `pnpm test` | 140 tests in 23 files |
 | Recording readiness | `pnpm exec vitest run src/logic/recording-readiness.test.ts --reporter=json` | 11 tests |
 | Lyric Firewall | `pnpm exec vitest run src/logic/lyric-risk.test.ts --reporter=json` | 12 tests |
 | Browser golden path | `pnpm test:e2e` | 1 Chromium test |

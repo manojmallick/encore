@@ -38,6 +38,7 @@ export async function runGoldenPath(page: Page): Promise<void> {
       contentType: "application/json",
       json: {
         model: "gpt-5.6",
+        generationSource: "demo_fixture",
         daysRemaining: 27,
         totalSessions: 2,
         lyricRisk: {
@@ -64,6 +65,7 @@ export async function runGoldenPath(page: Page): Promise<void> {
       contentType: "application/json",
       json: {
         model: "gpt-5.6",
+        generationSource: "demo_fixture",
         caption: CAPTION,
         practiceSessions: 1,
         practiceEntries: 1,
@@ -91,6 +93,7 @@ export async function runGoldenPath(page: Page): Promise<void> {
 
   await page.getByRole("button", { name: "Generate practice plan" }).click();
   await expect(page.getByRole("heading", { name: "Your route to record day." })).toBeVisible();
+  await expect(page.getByText("Demo response · GPT-5.6 schema")).toBeVisible();
 
   const firstSession = page.locator(".session-card").first();
   await firstSession.getByRole("button", { name: "Log practice" }).click();
@@ -113,6 +116,9 @@ export async function runGoldenPath(page: Page): Promise<void> {
 
   await page.getByRole("button", { name: "Generate Making Of caption" }).click();
   await expect(page.getByText(CAPTION)).toBeVisible();
+  await expect(
+    page.getByText(/deterministic caption matches the GPT-5.6 output schema/i),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Finish publish step" }).click();
 
   const markPublished = page.getByRole("button", { name: "Mark song published" });

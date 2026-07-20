@@ -46,7 +46,7 @@ Encore is a deployed Build Week prototype with a complete demonstration path, no
 |---|---|
 | Song input | The UI uses one checked-in, read-only Song Map for “Dreams” by Fleetwood Mac. There is no Song Map editor or multi-song library. |
 | Target date | The fixture target is `2026-08-15`. Live plan generation rejects it after that date because past targets fail closed. |
-| AI features | The two server routes call GPT-5.6 only when `OPENAI_API_KEY` is configured. Automated browser tests intercept those routes with deterministic responses. |
+| AI features | With `OPENAI_API_KEY`, the two server routes call GPT-5.6. Without it, they return deterministic schema-compatible fixtures that the UI prominently labels as mock data. Automated browser tests also use deterministic responses. |
 | Persistence | Plans, practice logs, recording decisions, and publication milestones use versioned `localStorage` keys. There is no account, database, or cross-device sync. |
 | Readiness | The score is deterministic application logic, not an AI prediction or an assessment of vocal or instrumental audio. |
 | Publishing | The artist posts externally, then confirms the milestone in Encore. No publishing-service integration exists. |
@@ -139,7 +139,7 @@ The model boundary is intentionally narrow. API routes validate unknown JSON, ap
 - Git
 - Node.js 24.x
 - pnpm 10.33.2
-- An OpenAI API key only for live plan and caption generation
+- An OpenAI API key only for live plan and caption generation; the labeled mock flow works without one
 
 ### Run locally
 
@@ -153,7 +153,7 @@ pnpm dev
 
 Open <http://localhost:3000>.
 
-The shell and saved browser workflow load without an API key. To call the live GPT-5.6 routes, edit `.env.local` and restart the development server:
+Without an API key, plan and caption actions return highlighted deterministic fixtures shaped like the production GPT-5.6 responses. They are explicitly labeled as mock data. To call the live GPT-5.6 routes, edit `.env.local` and restart the development server:
 
 ```dotenv
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
@@ -186,7 +186,7 @@ See [docs/REPRODUCIBILITY.md](./docs/REPRODUCIBILITY.md) for clean-room setup, c
 | Variable or constant | Default | Purpose |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | Runtime fallback: `https://example.com`; `.env.example`: `http://localhost:3000` | Canonical metadata origin. Set it to the final HTTPS origin in production. |
-| `OPENAI_API_KEY` | None | Server-only credential for both GPT-5.6 routes. |
+| `OPENAI_API_KEY` | None | Server-only credential for both GPT-5.6 routes. When absent or blank, both routes use visibly labeled deterministic demo fixtures. |
 | `ENCORE_SMOKE_BASE_URL` | None | Required HTTPS origin for `pnpm test:smoke`; localhost, paths, queries, and fragments are rejected. |
 | `VERCEL_AUTOMATION_BYPASS_SECRET` | None | Optional test-only header value for protected Vercel deployments. |
 | `PRACTICE_PLAN_MODEL` / `MAKING_OF_CAPTION_MODEL` | `gpt-5.6` | Model used by the plan and caption adapters. |

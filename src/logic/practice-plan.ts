@@ -63,6 +63,7 @@ export const PracticePlanModelOutputSchema = z
 export const GeneratedPracticePlanSchema = z
   .object({
     model: z.literal(PRACTICE_PLAN_MODEL),
+    generationSource: z.enum(["openai", "demo_fixture"]).optional(),
     daysRemaining: z.number().int().positive(),
     totalSessions: z.number().int().positive().max(MAX_PRACTICE_SESSIONS),
     lyricRisk: z

@@ -9,10 +9,14 @@ import {
   generateMakingOfCaption,
   type MakingOfCaptionModelGenerator,
 } from "../../../src/logic";
-import { generateMakingOfCaptionWithOpenAI } from "../../../src/server/openai-making-of-caption";
+import {
+  makingOfCaptionRuntime,
+  type GenerationSource,
+} from "../../../src/server/model-runtime";
 
 export interface MakingOfCaptionRouteDependencies {
   readonly generateModelOutput: MakingOfCaptionModelGenerator;
+  readonly generationSource?: GenerationSource;
 }
 
 function errorResponse(status: number, code: string, message: string, details?: unknown) {
@@ -33,7 +37,13 @@ export function createMakingOfCaptionPost(
         input,
         dependencies.generateModelOutput,
       );
-      return Response.json(caption, { status: 200 });
+      return Response.json(
+        {
+          ...caption,
+          generationSource: dependencies.generationSource ?? "openai",
+        },
+        { status: 200 },
+      );
     } catch (error) {
       if (error instanceof SyntaxError || error instanceof z.ZodError) {
         return errorResponse(
@@ -67,6 +77,6 @@ export function createMakingOfCaptionPost(
   };
 }
 
-export const POST = createMakingOfCaptionPost({
-  generateModelOutput: generateMakingOfCaptionWithOpenAI,
-});
+export async function POST(request: Request): Promise<Response> {
+  return createMakingOfCaptionPost(makingOfCaptionRuntime())(request);
+}

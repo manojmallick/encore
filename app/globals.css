@@ -483,6 +483,29 @@ button {
   color: #8a5a1f;
 }
 
+.demo-response-notice {
+  display: grid;
+  gap: 5px;
+  margin: -12px 0 30px;
+  padding: 16px 18px;
+  border: 1px solid #b87916;
+  border-left-width: 5px;
+  border-radius: 12px;
+  background: #fff4cf;
+  color: #573b0b;
+  line-height: 1.45;
+}
+
+.demo-response-notice strong {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.demo-response-notice span {
+  font-size: 0.82rem;
+}
+
 .creator-dashboard {
   margin: 10px 0 18px;
   padding: clamp(24px, 4vw, 38px);
@@ -1431,6 +1454,16 @@ button {
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.55;
+}
+
+.demo-caption-notice {
+  margin: 0;
+  padding: 14px 28px;
+  border-bottom: 1px solid rgba(200, 255, 72, 0.24);
+  background: rgba(200, 255, 72, 0.1);
+  color: #e6f7b7;
+  font-size: 0.72rem;
+  line-height: 1.5;
 }
 
 .caption-evidence {
