@@ -2,6 +2,16 @@
 
 All notable changes to Encore are documented in this file.
 
+## [Unreleased]
+
+### Documentation
+
+- Added verified Codex GPT-5.6 session evidence and mapped it to the public pull
+  request history.
+- Added no-rebuild judge testing instructions and an honest under-three-minute
+  demo-video plan.
+- Recorded the Encore Devpost draft URL in the submission evidence ledger.
+
 ## [1.0.0] - 2026-07-20
 
 ### Added

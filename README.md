@@ -8,7 +8,7 @@
 [![OpenAI Responses API](https://img.shields.io/badge/OpenAI-Responses_API-412991.svg?logo=openai&logoColor=white)](https://platform.openai.com/docs/api-reference/responses)
 [![OpenAI Build Week 2026](https://img.shields.io/badge/context-OpenAI_Build_Week_2026-0f766e.svg)](./ENCORE_APPS_FOR_LIFE_PLAN.md)
 
-Independent cover artists often manage one recording deadline across scattered notes, calendars, and memory. Encore connects that work into one path: a GPT-5.6 countdown plan, section-level practice logs, deterministic readiness, and a lyric-risk-checked caption. It was built by [Manoj Mallick](https://github.com/manojmallick) for OpenAI Build Week, with the implementation history, automated checks, and production smoke workflow kept in the public repository.
+Independent cover artists often manage one recording deadline across scattered notes, calendars, and memory. Encore connects that work into one path: a structured countdown plan, section-level practice logs, deterministic readiness, and a lyric-risk-checked caption. It was built by [Manoj Mallick](https://github.com/manojmallick) for OpenAI Build Week, with the implementation history, automated checks, and production smoke workflow kept in the public repository.
 
 [Open the production demo](https://encore-sigma-ten.vercel.app) · [Read the Build Week submission](./docs/BUILD_WEEK_SUBMISSION.md)
 
@@ -18,6 +18,8 @@ Independent cover artists often manage one recording deadline across scattered n
 - [Honest Status](#honest-status)
 - [Architecture](#architecture)
 - [How it works](#how-it-works)
+- [Built with Codex and GPT-5.6](#built-with-codex-and-gpt-56)
+- [Judge test path](#judge-test-path-no-rebuild-required)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
 - [Project Structure](#project-structure)
@@ -31,7 +33,7 @@ Encore is designed for the gap between choosing a cover song and publishing the 
 
 | The artist's problem | Encore's implemented response |
 |---|---|
-| Practice notes are disconnected from the recording date | GPT-5.6 returns a validated, session-by-session countdown plan |
+| Practice notes are disconnected from the recording date | A validated model boundary returns a session-by-session countdown plan, with a labeled fixture fallback for no-key testing |
 | Progress feels subjective | Confidence is logged per section on a 1–5 scale and reduced to explicit trends |
 | A single average can hide missing or declining sections | Readiness withholds incomplete scores and exposes every threshold and penalty |
 | Free-text notes can accidentally become lyric storage | A transparent heuristic blocks long quotations, stanza-shaped text, and repeated substantive lines |
@@ -79,7 +81,9 @@ flowchart TD
   subgraph Server["🔒 Next.js server layer"]
     PlanAPI["POST /api/practice-plan"]
     CaptionAPI["POST /api/making-of-caption"]
+    Runtime{"OPENAI_API_KEY configured?"}
     OpenAI["OpenAI Responses API · GPT-5.6"]
+    Fixture["Deterministic demo fixture"]
   end
 
   subgraph Outputs["🎯 Artist-facing outputs"]
@@ -95,8 +99,11 @@ flowchart TD
   PlanAPI --> Firewall
   Firewall -- "blocked" --> Blocked
   Blocked --> Error
-  Firewall -- "passed" --> OpenAI
+  Firewall -- "passed" --> Runtime
+  Runtime -- "yes" --> OpenAI
+  Runtime -- "no" --> Fixture
   OpenAI --> OutputSchema
+  Fixture --> OutputSchema
   OutputSchema --> Plan
   Plan --> LocalStore
   Plan --> Log
@@ -124,13 +131,66 @@ The model boundary is intentionally narrow. API routes validate unknown JSON, ap
 ## How it works
 
 1. **Load the demo Song Map.** The client renders the checked-in song metadata, five ordered sections, structural difficulty notes, and target date.
-2. **Generate a countdown.** Choose 1–7 sessions per week. The plan route validates the request, rejects lyric-risky notes, calculates UTC calendar days, caps the plan at 24 sessions, and asks GPT-5.6 for contiguous structured sessions.
+2. **Generate a countdown.** Choose 1–7 sessions per week. The plan route validates the request, rejects lyric-risky notes, calculates UTC calendar days, and caps the plan at 24 sessions. It requests contiguous structured sessions from GPT-5.6 when a key exists or uses a labeled deterministic fixture otherwise.
 3. **Log practice.** Each entry records one known section, one plan session, confidence from 1–5, and an optional lyric-checked note of up to 280 characters.
 4. **Calculate trends.** Fewer than two entries for a section yields `insufficient_data`. Otherwise, Encore compares the first and last confidence values among the three most recent entries to produce `improving`, `flat`, or `declining`.
 5. **Calculate readiness.** No score is shown until every section has a confidence rating. The score starts from average confidence as a percentage and subtracts 8 points per declining section. Every factor and threshold is displayed.
 6. **Make the recording call.** Encore recommends gathering data, adjusting the plan, continuing practice, or recording. The artist can record before `ready`, but must acknowledge the override.
-7. **Generate the Making Of caption.** After recording and at least one valid practice entry, the caption route sends validated history to GPT-5.6. The returned caption must be 40–500 characters and pass the Lyric Firewall again.
+7. **Generate the Making Of caption.** After recording and at least one valid practice entry, the caption route uses GPT-5.6 when configured or a labeled fixture otherwise. The returned caption must be 40–500 characters and pass the Lyric Firewall again.
 8. **Confirm publication.** The artist copies and posts the caption outside Encore, then explicitly records the local publish milestone. The action is reversible without deleting practice history.
+
+## Built with Codex and GPT-5.6
+
+### How Codex was used
+
+Codex carried Encore from an ordered product thesis to a tagged release. Each
+increment became a scoped GitHub issue, an isolated branch, implementation,
+tests, a reviewable pull request, and a merge. Codex also ran the browser golden
+path, diagnosed validation and date failures, checked accessibility, refreshed
+release documentation, and verified the production deployment.
+
+The primary `/feedback` build session is
+`019f74c9-756b-7421-a9e2-68d08be3bb63`. Its local Codex session metadata records
+`gpt-5.6-sol` for the core implementation turns beginning with the Lyric
+Firewall and structured planner and continuing through practice persistence,
+recording readiness, caption generation, the golden path, hardening,
+accessibility, deployment, documentation, and the `v1.0.0` release. The
+[GPT-5.6 evidence record](./docs/GPT56_EVIDENCE.md) maps that session to the
+public pull-request history.
+
+### Important decisions made with Codex
+
+| Decision | Why it mattered |
+|---|---|
+| Ship one complete song lifecycle | A coherent map-to-publish path was more testable than a shallow multi-song library. |
+| Accept structural notes, never stored lyrics | The product can reason about difficult sections without becoming a lyric repository. |
+| Keep readiness deterministic | Coverage, confidence, trend penalties, and thresholds remain visible and testable instead of becoming an unexplained model score. |
+| Constrain model calls to two server boundaries | Zod schemas, preflight checks, output validation, and sanitized errors surround both generated artifacts. |
+| Label the no-key path as mock data | Judges can complete the workflow without an API key while never mistaking fixtures for live GPT output. |
+
+### Precise GPT-5.6 contribution
+
+GPT-5.6 Sol in Codex contributed to the implementation and verification of the
+core application from `v0.4.0` through `v1.0.0`. That work includes the Lyric
+Firewall, GPT-5.6 response adapters, structured prompts and schemas, persistence,
+mastery trends, explainable readiness, creator decisions, caption generation,
+the record-to-publish flow, tests, accessibility, deployment, and release work.
+
+This is separate from runtime generation. The server adapters target
+`gpt-5.6`, but the public deployment has no `OPENAI_API_KEY`; it therefore uses
+prominently labeled deterministic fixtures. Encore does not present those
+fixtures as model output.
+
+## Judge test path — no rebuild required
+
+| Path | Steps | API key or credentials |
+|---|---|---|
+| Hosted product | Open the [production demo](https://encore-sigma-ten.vercel.app), generate the countdown, log practice, make a recording decision, generate the caption, and confirm publication. | None. Mock plan and caption responses are visibly labeled. |
+| Local development | Clone the repository, run `pnpm install --frozen-lockfile` and `pnpm dev`, then open `http://localhost:3000`. A production build is not required. | None for the complete mock-data path. |
+| Automated verification | Run `pnpm test` and `pnpm test:e2e`. Playwright starts its own local server and supplies deterministic API responses. | None. |
+
+The checked-in Song Map is the sample data. No seed database, account, or test
+login is required.
 
 ## Quick Start
 
@@ -227,6 +287,7 @@ encore/
 │   │   ├── creator-dashboard.ts         # Weak-section ranking and recommendation
 │   │   └── *-storage.ts                 # Versioned localStorage adapters
 │   └── server/
+│       ├── model-runtime.ts             # Live-key selection and labeled demo fixtures
 │       ├── openai-practice-plan.ts      # Responses API plan adapter
 │       └── openai-making-of-caption.ts  # Responses API caption adapter
 ├── tests/
@@ -255,7 +316,7 @@ Only the v1.0 submission freeze is currently tracked. The other items below come
 
 | Item | Status | Evidence or boundary |
 |---|---|---|
-| Freeze the Build Week v1.0 submission | Tracked in [issue #33](https://github.com/manojmallick/encore/issues/33) | Waiting on live GPT evidence, demo video, Devpost confirmation, and Codex session evidence |
+| Complete the Build Week submission | Tracked in [issue #33](https://github.com/manojmallick/encore/issues/33) | `v1.0.0` and Codex session evidence are complete; the public video and final Devpost submission remain |
 | Editable and multiple Song Maps | Candidate | The current UI imports one fixed fixture |
 | Accounts and cross-device persistence | Candidate | Current persistence is browser-local only |
 | Audio recording, pitch analysis, or transcription | Research only | Explicitly excluded from the Build Week release |

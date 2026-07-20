@@ -23,8 +23,9 @@ memory.
 ### What Encore does
 
 The artist starts with one Song Map containing section names and original
-structural notes—never lyrics. GPT-5.6 converts that map into a validated,
-dated countdown plan that front-loads difficult sections. Practice entries
+structural notes—never lyrics. When configured, GPT-5.6 converts that map into
+a validated, dated countdown plan that front-loads difficult sections; the
+no-key deployment uses a labeled schema-compatible fixture. Practice entries
 track confidence by section; a deterministic readiness calculation exposes
 coverage, trends, elapsed time, thresholds, and its recommendation. After the
 artist records, GPT-5.6 synthesizes the validated practice history into a short
@@ -44,12 +45,14 @@ deterministic fixtures that follow the production response schemas.
 Codex carried the ordered product plan through scoped GitHub issues, isolated
 branches, tests, commits, and reviewed pull requests. The public sequence from
 [issue #1](https://github.com/manojmallick/encore/issues/1) through
-[PR #28](https://github.com/manojmallick/encore/pull/28) is reproducible
+[PR #34](https://github.com/manojmallick/encore/pull/34) is reproducible
 evidence of that iteration. One concrete design correction was recording
 readiness: the final deterministic algorithm withholds incomplete coverage and
 penalizes declining sections instead of relying on a reassuring average alone.
-The final timestamped Codex task/session artifact is intentionally left pending
-in the evidence ledger until captured from the product UI.
+The primary `/feedback` session is
+`019f74c9-756b-7421-a9e2-68d08be3bb63`. Its local metadata records
+`gpt-5.6-sol` across the core implementation turns; the public PR trail is
+mapped in the [GPT-5.6 evidence record](./GPT56_EVIDENCE.md).
 
 ### Accomplishments
 
@@ -74,34 +77,41 @@ generative planning made the recommendation explainable and testable. See the
 ### What is next
 
 Encore is deployed and the production origin passes the clean-browser release
-smoke. The remaining Build Week work is to record the live GPT-5.6 plan and
-caption requests, capture the Codex session evidence, and freeze matching
-repository, video, deployment, and Devpost descriptions. Accounts,
+smoke. The `v1.0.0` release and Codex GPT-5.6 evidence are frozen. The remaining
+Build Week work is to record and publish the demo video, attach it to the
+Devpost draft, and submit. Accounts,
 cross-device sync, audio analysis, and direct publishing remain deliberately
 out of scope.
 
-## Demo runbook — target 2:45
+## Demo video plan — target 2:40
 
-Prepare a clean browser profile, a working `OPENAI_API_KEY`, stable network, and
-screen recording before starting. Keep DevTools Network visible only when it
-does not expose request headers or secrets.
+Prepare a clean browser profile, stable network, and 1080p screen recording.
+Use the public deployment without credentials. Keep the mock labels visible
+and never describe a fixture as live model output.
 
 | Time | Screen and action | Narration goal | Evidence captured |
 |---|---|---|---|
-| 0:00–0:12 | Open on the final Making Of caption, then return to the top | “This came from my own practice history—not a generic template.” | Outcome-first hook |
-| 0:12–0:28 | Show the five-section Song Map and structural notes | Define the independent cover artist and the one-song problem; point out that no lyrics are entered | Target user and bounded input |
-| 0:28–0:48 | Trigger a real **Generate countdown plan** request and wait for sessions | Explain that GPT-5.6 returns validated dated sessions and front-loads hard sections | Live plan request and rendered result |
-| 0:48–1:04 | Briefly show a lyric-risk rejection or the pass confirmation | Explain the three transparent heuristics and rewrite guidance | Lyric Firewall behavior |
-| 1:04–1:30 | Log confidence for sections and show mastery/readiness update | Explain complete coverage, declining-section penalty, and visible thresholds | Deterministic readiness factors |
-| 1:30–1:47 | Save the recording decision; acknowledge override only if shown | “Encore recommends; the artist decides.” | Artist-agency flow |
-| 1:47–2:07 | Trigger a real **Generate Making Of caption** request | Explain that GPT-5.6 uses validated practice history and the output is lyric-checked again | Live caption request and rendered result |
-| 2:07–2:22 | Copy the caption and confirm the external publish milestone | Clarify that Encore does not impersonate an external publishing integration | Completed golden path |
-| 2:22–2:37 | Show the GitHub PR sequence, tests, and timestamped Codex task/session evidence | Name the readiness iteration and real test counts | Codex + repository evidence |
-| 2:37–2:45 | Hold the deployed URL and Encore wordmark | “Encore: for the space between picking a song and hitting publish.” | Legible final URL |
+| 0:00–0:12 | Open on the final caption/dashboard, then return to the Song Map | “Encore takes one cover from structural notes to a publish decision.” | Outcome-first hook |
+| 0:12–0:30 | Show the five-section Song Map and target date | Explain the specific cover-artist problem and that no lyrics are stored. | User, problem, bounded input |
+| 0:30–0:50 | Generate the countdown and pause on the highlighted mock notice | “The production adapter targets GPT-5.6. This no-key demo uses the same validated schema and labels the fixture honestly.” | Working plan plus honest runtime boundary |
+| 0:50–1:05 | Show the Lyric Firewall result | Explain the quotation, stanza-shape, and repeated-line checks. | Safety behavior |
+| 1:05–1:30 | Log practice and show section history/trends | Explain section-level confidence and browser persistence. | Core interaction and state |
+| 1:30–1:52 | Show readiness factors and save the recording decision | “Readiness is deterministic and explainable; Encore recommends, the artist decides.” | Key product decision |
+| 1:52–2:10 | Generate the labeled mock caption and confirm publication | Explain output validation, the second lyric check, and the external-publish boundary. | Completed golden path |
+| 2:10–2:31 | Show README evidence and the merged PR sequence | Name session `019f74c9-756b-7421-a9e2-68d08be3bb63`; explain GPT-5.6 Sol in Codex built the core from the Lyric Firewall through release. | Required Codex and GPT-5.6 evidence |
+| 2:31–2:40 | Hold the deployed URL and Encore wordmark | “Encore: for the space between picking a song and hitting publish.” | Memorable close and test URL |
 
-Do one unrecorded rehearsal. If either live request fails, fix the configuration
-or network and restart; do not substitute intercepted test data while calling
-the request live.
+### Recording and upload checklist
+
+- Rehearse once and target `2:40`; reject any export at or above `3:00`.
+- Record readable 1080p video with cursor emphasis and spoken narration.
+- Do not show environment files, request headers, email, or local Codex logs.
+- Suggested title: `Encore — OpenAI Build Week 2026 Demo`.
+- Put the production URL, repository, `v1.0.0` release, and session ID in the
+  YouTube description.
+- Set YouTube visibility to **Public**, wait for HD processing, then test the
+  URL in an incognito window with captions and audio enabled.
+- Watch the complete uploaded video once before adding its URL to Devpost.
 
 ## Evidence ledger
 
@@ -118,12 +128,11 @@ Status meanings: **verified** is reproducible from the public repository;
 | Recording-readiness count | verified | 11 expanded tests; run the JSON-reporter command in the reproducibility guide |
 | Lyric Firewall count | verified | 12 expanded tests; run the JSON-reporter command in the reproducibility guide |
 | Chromium golden path | verified | 1 test; rerun `pnpm test:e2e` |
-| Live GPT-5.6 practice-plan request | capture | Record the request action and rendered dated plan in the final demo |
-| Live GPT-5.6 caption request | capture | Record the request action, rendered caption, and pass confirmation in the final demo |
-| Timestamped Codex task/session evidence | capture | Use `/feedback` in the relevant Codex task, then record the exact session ID here and in Devpost |
+| Runtime GPT-5.6 requests | unavailable | No API key is configured; the public deployment visibly labels schema-compatible plan and caption fixtures as mock data |
+| Timestamped Codex task/session evidence | verified | `019f74c9-756b-7421-a9e2-68d08be3bb63`; local metadata records `gpt-5.6-sol`, with public outputs mapped in [GPT56_EVIDENCE.md](./GPT56_EVIDENCE.md) |
 | Production URL | verified | <https://encore-sigma-ten.vercel.app>; clean-browser production smoke passed locally against the v0.16 release candidate |
 | Demo video URL | capture | Add only after the final under-three-minute recording is uploaded and reviewed |
-| Devpost project URL and submitted timestamp | capture | Add after submission; retain confirmation before the stated deadline |
+| Devpost project URL and submitted timestamp | draft | <https://devpost.com/software/encore-8q7zfw>; add the public video and submission timestamp before the deadline |
 
 ## Final consistency check
 
