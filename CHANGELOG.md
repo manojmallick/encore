@@ -11,6 +11,7 @@ All notable changes to Encore are documented in this file.
 - Added no-rebuild judge testing instructions and an honest under-three-minute
   demo-video plan.
 - Recorded the Encore Devpost draft URL in the submission evidence ledger.
+- Added a screenshot-led product tour for the README and Devpost submission.
 
 ## [1.0.0] - 2026-07-20
 

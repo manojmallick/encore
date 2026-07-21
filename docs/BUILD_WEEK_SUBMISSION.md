@@ -32,6 +32,31 @@ artist records, GPT-5.6 synthesizes the validated practice history into a short
 Making Of caption. The artist publishes externally and confirms the milestone
 in Encore.
 
+### How it looks
+
+The submission gallery follows the complete product path: Song Map, generated
+countdown, practice logging, section mastery and readiness, the artist's
+recording decision, and the Making Of caption. The screenshots use the public
+no-key deployment, so the deterministic plan and caption are visibly labeled
+as mock responses shaped like the production GPT-5.6 schemas.
+
+### Architecture
+
+Encore keeps generation narrow and decision support explainable:
+
+1. The browser loads a lyric-free Song Map and stores the plan, practice logs,
+   recording decision, and publication milestone in versioned `localStorage`.
+2. Next.js API routes validate unknown JSON with Zod and run the Lyric Firewall
+   before any model boundary.
+3. With `OPENAI_API_KEY`, the server calls GPT-5.6 through the Responses API;
+   without it, the same routes return prominently labeled deterministic
+   fixtures.
+4. Structured outputs are validated again before the browser accepts them.
+5. Practice logs feed deterministic mastery trends and transparent recording
+   readiness. Encore recommends; the artist decides.
+6. After recording, validated practice history produces a lyric-checked caption.
+   Publishing happens outside Encore, and only the milestone is stored locally.
+
 ### OpenAI and Codex
 
 Encore uses GPT-5.6 through the OpenAI Responses API at two narrow, server-only
@@ -131,6 +156,7 @@ Status meanings: **verified** is reproducible from the public repository;
 | Runtime GPT-5.6 requests | unavailable | No API key is configured; the public deployment visibly labels schema-compatible plan and caption fixtures as mock data |
 | Timestamped Codex task/session evidence | verified | `019f74c9-756b-7421-a9e2-68d08be3bb63`; local metadata records `gpt-5.6-sol`, with public outputs mapped in [GPT56_EVIDENCE.md](./GPT56_EVIDENCE.md) |
 | Production URL | verified | <https://encore-sigma-ten.vercel.app>; clean-browser production smoke passed locally against the v0.16 release candidate |
+| Product screenshot gallery | verified | Six workflow images in [`public/screenshots`](../public/screenshots) cover the Song Map-to-publish path and preserve visible mock-response labels |
 | Demo video URL | capture | Add only after the final under-three-minute recording is uploaded and reviewed |
 | Devpost project URL and submitted timestamp | draft | <https://devpost.com/software/encore-8q7zfw>; add the public video and submission timestamp before the deadline |
 

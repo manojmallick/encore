@@ -18,6 +18,7 @@ Independent cover artists often manage one recording deadline across scattered n
 - [Honest Status](#honest-status)
 - [Architecture](#architecture)
 - [How it works](#how-it-works)
+- [Product tour](#product-tour)
 - [Built with Codex and GPT-5.6](#built-with-codex-and-gpt-56)
 - [Judge test path](#judge-test-path-no-rebuild-required)
 - [Quick Start](#quick-start)
@@ -138,6 +139,27 @@ The model boundary is intentionally narrow. API routes validate unknown JSON, ap
 6. **Make the recording call.** Encore recommends gathering data, adjusting the plan, continuing practice, or recording. The artist can record before `ready`, but must acknowledge the override.
 7. **Generate the Making Of caption.** After recording and at least one valid practice entry, the caption route uses GPT-5.6 when configured or a labeled fixture otherwise. The returned caption must be 40–500 characters and pass the Lyric Firewall again.
 8. **Confirm publication.** The artist copies and posts the caption outside Encore, then explicitly records the local publish milestone. The action is reversible without deleting practice history.
+
+## Product tour
+
+These screenshots follow the hosted no-key path. Plan and caption fixtures are
+visibly labeled as mock data; readiness and trends are calculated from the
+practice entries shown in the browser.
+
+| Song Map | Countdown plan |
+|---|---|
+| [![The Encore Song Map with the target date and five mapped sections](./public/screenshots/01-song-map.png)](./public/screenshots/01-song-map.png) | [![A generated eight-session countdown with the mock-response notice](./public/screenshots/02-countdown-plan.png)](./public/screenshots/02-countdown-plan.png) |
+| Start from one read-only, lyric-free map of the song's structure. | Generate a dated route to record day. The public deployment identifies its deterministic fixture. |
+
+| Practice logging | Mastery and readiness |
+|---|---|
+| [![The section, confidence, and structural-note practice form](./public/screenshots/03-practice-logging.png)](./public/screenshots/03-practice-logging.png) | [![Section mastery cards and the transparent readiness view](./public/screenshots/04-mastery-readiness.png)](./public/screenshots/04-mastery-readiness.png) |
+| Record one mapped section, a confidence value from 1–5, and an optional structural note. | See section coverage and recent trends before relying on the recording recommendation. |
+
+| Explainable recording decision | Lyric-safe Making Of caption |
+|---|---|
+| [![The creator dashboard asking the artist to acknowledge an early recording decision](./public/screenshots/06-recording-decision.png)](./public/screenshots/06-recording-decision.png) | [![A labeled mock Making Of caption with lyric-risk status and publish controls](./public/screenshots/07-making-of-publish.png)](./public/screenshots/07-making-of-publish.png) |
+| Encore recommends the next move, exposes the score, and leaves the artistic decision to the creator. | Turn validated practice history into a caption, then publish externally and record the milestone locally. |
 
 ## Built with Codex and GPT-5.6
 
@@ -293,6 +315,7 @@ encore/
 ├── tests/
 │   ├── e2e/golden-path-flow.ts          # Reusable deterministic browser flow
 │   └── smoke/production.spec.ts         # HTTPS deployment contract
+├── public/screenshots/                   # Hosted product-tour and Devpost images
 ├── docs/                                # Architecture, reproduction, diary, submission
 ├── playwright.config.ts                 # Local Chromium configuration
 ├── playwright.smoke.config.ts           # Existing-deployment smoke configuration
