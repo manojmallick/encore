@@ -32,15 +32,9 @@ artist records, GPT-5.6 synthesizes the validated practice history into a short
 Making Of caption. The artist publishes externally and confirms the milestone
 in Encore.
 
-### How it looks
-
-The submission gallery follows the complete product path: Song Map, generated
-countdown, practice logging, section mastery and readiness, the artist's
-recording decision, and the Making Of caption. The screenshots use the public
-no-key deployment, so the deterministic plan and caption are visibly labeled
-as mock responses shaped like the production GPT-5.6 schemas.
-
 ### Architecture
+
+![Encore architecture](../public/screenshots/00-architecture.png)
 
 Encore keeps generation narrow and decision support explainable:
 
@@ -56,6 +50,22 @@ Encore keeps generation narrow and decision support explainable:
    readiness. Encore recommends; the artist decides.
 6. After recording, validated practice history produces a lyric-checked caption.
    Publishing happens outside Encore, and only the milestone is stored locally.
+
+### How it looks
+
+The Devpost story embeds the complete product path, not only the media gallery:
+
+1. **Song Map** — one read-only, lyric-free map with five named sections.
+2. **Countdown plan** — a dated plan with the no-key mock-response notice visible.
+3. **Practice logging** — a mapped section, session, confidence, and structural note.
+4. **Mastery and readiness** — section coverage, trends, factors, and thresholds.
+5. **Recording decision** — Encore recommends while the artist decides.
+6. **Making Of and publish** — a lyric-checked caption and explicit external-post boundary.
+
+The screenshots use the public no-key deployment, so deterministic plan and
+caption fixtures are visibly labeled as mock responses shaped like the
+production GPT-5.6 schemas. The canonical files are in
+[`public/screenshots`](../public/screenshots).
 
 ### OpenAI and Codex
 
@@ -148,7 +158,7 @@ Status meanings: **verified** is reproducible from the public repository;
 | Public source repository | verified | <https://github.com/manojmallick/encore> |
 | Relevant license | verified | [MIT license](../LICENSE) |
 | Ordered implementation history | verified | [issues](https://github.com/manojmallick/encore/issues?q=is%3Aissue) and [merged PRs](https://github.com/manojmallick/encore/pulls?q=is%3Apr+is%3Amerged) |
-| Reproducible setup and architecture | verified | [reproducibility](./REPRODUCIBILITY.md) and [architecture](./ARCHITECTURE.md) |
+| Reproducible setup and architecture | verified | [reproducibility](./REPRODUCIBILITY.md), [architecture notes](./ARCHITECTURE.md), and [rendered system flow](../public/screenshots/00-architecture.png) |
 | Unit/integration baseline | verified | 140 tests across 23 files; rerun `pnpm test` |
 | Recording-readiness count | verified | 11 expanded tests; run the JSON-reporter command in the reproducibility guide |
 | Lyric Firewall count | verified | 12 expanded tests; run the JSON-reporter command in the reproducibility guide |
@@ -156,7 +166,7 @@ Status meanings: **verified** is reproducible from the public repository;
 | Runtime GPT-5.6 requests | unavailable | No API key is configured; the public deployment visibly labels schema-compatible plan and caption fixtures as mock data |
 | Timestamped Codex task/session evidence | verified | `019f74c9-756b-7421-a9e2-68d08be3bb63`; local metadata records `gpt-5.6-sol`, with public outputs mapped in [GPT56_EVIDENCE.md](./GPT56_EVIDENCE.md) |
 | Production URL | verified | <https://encore-sigma-ten.vercel.app>; clean-browser production smoke passed locally against the v0.16 release candidate |
-| Product screenshot gallery | verified | Six workflow images in [`public/screenshots`](../public/screenshots) cover the Song Map-to-publish path and preserve visible mock-response labels |
+| Devpost architecture and product screens | verified | One rendered architecture diagram and seven workflow images in [`public/screenshots`](../public/screenshots) cover the Song Map-to-publish path and preserve visible mock-response labels; the same assets are embedded in the Devpost story |
 | Demo video URL | capture | Add only after the final under-three-minute recording is uploaded and reviewed |
 | Devpost project URL and submitted timestamp | draft | <https://devpost.com/software/encore-8q7zfw>; add the public video and submission timestamp before the deadline |
 
