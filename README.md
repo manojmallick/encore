@@ -58,6 +58,15 @@ Encore is a deployed Build Week prototype with a complete demonstration path, no
 
 ## Architecture
 
+[![Encore architecture: a lyric-free Song Map and practice logs pass through validated server boundaries into a countdown, explainable readiness, an artist decision, and a publish milestone](./public/screenshots/00-architecture.png)](./public/screenshots/00-architecture.png)
+
+The rendered overview above is also included in the Devpost story and gallery.
+The source-of-truth flow remains available below for reviewers who want to
+inspect or adapt it.
+
+<details>
+<summary>View the Mermaid source</summary>
+
 ```mermaid
 flowchart TD
   subgraph Browser["🖥️ Browser layer"]
@@ -126,6 +135,8 @@ flowchart TD
   ExternalPost --> Published
   Published --> LocalStore
 ```
+
+</details>
 
 The model boundary is intentionally narrow. API routes validate unknown JSON, apply lyric-risk checks before outbound requests, request Zod-backed structured output, validate the response again, and return sanitized errors to the browser.
 
@@ -315,7 +326,7 @@ encore/
 ├── tests/
 │   ├── e2e/golden-path-flow.ts          # Reusable deterministic browser flow
 │   └── smoke/production.spec.ts         # HTTPS deployment contract
-├── public/screenshots/                   # Hosted product-tour and Devpost images
+├── public/screenshots/                   # Architecture and hosted product-tour images
 ├── docs/                                # Architecture, reproduction, diary, submission
 ├── playwright.config.ts                 # Local Chromium configuration
 ├── playwright.smoke.config.ts           # Existing-deployment smoke configuration
